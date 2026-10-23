@@ -24,6 +24,22 @@ The original standalone HTML workflow remains unchanged in direct mode.
 See [metadata transport](docs/metadata-transport.md) for the interface and
 [gateway setup](gateway/README.md) for an example Cloudflare Worker.
 
+## API-first model inspection and download links
+
+Deeplined can inspect a model directly from Hub API metadata without opening
+its model webpage. Click **Inspect** beside any base model or derivative, or
+enter a full owner/model-name in the model inspector field. The viewer shows
+model details, structured model-card metadata, available repository files and
+direct download URLs. It can copy individual links or a filtered set of links.
+
+File URLs are pinned to the model revision SHA whenever available. Discovery
+still works in browsers where the model webpage is inaccessible, although
+API access may differ by browser or by endpoint. If individual model details
+fail, exact-match search results provide a partial fallback; no missing
+filenames are guessed. The full README body is not fetched by this feature.
+
+See [API inspector design and usage](docs/api-model-inspector.md).
+
 ## Feature specifics
 
 ### Tiered Output Structure

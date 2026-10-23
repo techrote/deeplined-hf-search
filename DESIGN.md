@@ -231,3 +231,27 @@ Browser connection tests use the Hub listing endpoint or the gateway
 /health endpoint, without altering system network configuration.
 
 Design and usage: docs/metadata-transport.md and gateway/README.md.
+
+---
+
+## API-first Model Inspector
+
+Model inspection is deliberately separate from the search-tree normalization:
+the existing normalizeModel function retains its compact search data. The
+inspector fetches full structured metadata on demand from the existing fetchJson
+queue, preserving request pacing and Direct/Gateway selection.
+
+Each L2 and L4 row has an Inspect button. A manual exact model-ID field
+supports investigation beyond the displayed top-N results. The native dialog
+renders API data as text nodes, without evaluating HTML from model cards.
+If the detail path fails, exact matching on the listing API can provide
+partial metadata; failure to obtain the optional tree leaves siblings intact.
+
+File paths must be taken from actual API results. Download links use
+/resolve/{revision}/{filename}?download=true on the original host.
+A SHA from the API pins the revision, with explicit main fallback if absent.
+No downloads are performed by JavaScript. Render and copy limits prevent
+oversized pages and clipboard payloads. Inspector serial and fetch-generation
+guards suppress stale results when users change sources or close the dialog.
+
+See docs/api-model-inspector.md for full contracts and acceptance checks.

@@ -1,5 +1,17 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.02 — API model inspection and direct file links
+
+- Added a locally rendered model detail dialog and exact model-ID lookup,
+  reachable from both base-model and derivative rows.
+- Added read-only API inspection, partial search-list fallback, repository
+  file manifests, optional tree sizes, filename/weight filtering and
+  version-pinned direct download URLs with copy controls.
+- Added validation and regression tests for model identity, file paths,
+  revision pinning, API fallback and UI integration.
+- Kept search, browsing and file downloads separate; no backend is required.
+
+
 ### v261023.01 — Configurable metadata transport
 
 - Added a Direct/Gateway selector, gateway URL validation, connectivity check,
