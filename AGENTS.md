@@ -25,6 +25,21 @@ Read `DESIGN.md` before making changes that touch: popup behavior, CONFIG values
 - **No structural renders from resolution paths**: `tryResolveModelParam`, `deepenBatch`, and the inline derive loop update state/caches only, queue progressive badge updates via `UI.queueUpdate()`, and schedule structural renders via `_schedulePostDeepenRender` only when filter boundaries are crossed.
 - **`refreshAllExpanded(force, allowAsync = true, authorFilter = null)`**: The `allowAsync` parameter distinguishes structural-pass re-renders (`false`, no deepening) from user-triggered refreshes (`true`, deepens via `refreshAuthorL2Section`). When `authorFilter` is set, only that author's subtree is re-expanded via O(1) Map lookup, avoiding a full scan.
 
+## Optional API transport
+
+The HTML application must keep direct model discovery as the default.
+Optional gateway routing belongs in resolveHubApiUrl, called by fetchJson
+before queueing and deduplication. The source switch must clear old results,
+abort in-flight requests, and preserve existing generation checks.
+
+gateway/src/worker.mjs is a narrowly scoped metadata service. Keep the
+upstream fixed and routes read-only; refuse arbitrary URLs, weight files
+and redirects. Update the gateway tests whenever an endpoint is added.
+
+Run node --test tests/network-transport-test.cjs tests/gateway-test.mjs
+when changing transport behaviour. The overall design is described in
+docs/metadata-transport.md.
+
 ## Testing
 
 Open in browser, validate:
