@@ -40,6 +40,22 @@ Run node --test tests/network-transport-test.cjs tests/gateway-test.mjs
 when changing transport behaviour. The overall design is described in
 docs/metadata-transport.md.
 
+## API-first model inspector
+
+The inspector is an on-demand feature. Keep normalizeModel lean and preserve
+the existing search tree and event delegation. Retrieve model detail through
+fetchJson so the selected API transport and rate limiter remain authoritative.
+Only construct download URLs from validated model IDs, repository filenames
+and an API-qualified SHA (falling back to a clearly labelled main revision).
+
+Never render model-card API text as unsanitized HTML. Avoid dependencies and
+keep the standalone HTML application functional without auxiliary services.
+Use a capture-phase handler for Inspect buttons so table-row expansion is not
+triggered. Preserve stale-request protection when changing API sources.
+
+See docs/api-model-inspector.md for design and:
+node --test tests/model-inspector-test.cjs for focused coverage.
+
 ## Testing
 
 Open in browser, validate:

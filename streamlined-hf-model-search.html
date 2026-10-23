@@ -259,6 +259,41 @@
   .api-connection-controls button:focus-visible, .api-connection-controls select:focus-visible,
   .api-connection-controls input:focus-visible { outline: 2px solid #58a6ff; }
   #api-connection-status { font-size: 0.74rem; color: #9da7b4; min-height: 1em; margin-top: 5px; }
+
+  #inspect-lookup { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#161b22; border:1px solid #30363d; border-radius:7px; padding:9px 12px; margin:10px 0; font-size:0.8rem; }
+  #inspect-lookup label { color:#a5b9cb; font-weight:600; }
+  #inspect-lookup input { flex:1; min-width:180px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:5px; padding:7px; font:inherit; }
+  #inspect-lookup button, .model-inspect-btn { border:1px solid #3b5674; background:#1c344f; border-radius:5px; color:#b9ddff; padding:4px 8px; font:inherit; font-size:0.73rem; cursor:pointer; }
+  #inspect-lookup button:focus-visible, .model-inspect-btn:focus-visible { outline:2px solid #58a6ff; outline-offset:2px; }
+  .model-inspect-btn { margin-left:7px; vertical-align:middle; }
+  #inspect-lookup-result { color:#f2c572; font-size:0.75rem; }
+  #model-inspector { width:min(1020px,96vw); max-width:96vw; max-height:92vh; margin:auto; border:1px solid #48617e; border-radius:9px; padding:0; color:#c9d1d9; background:#0d1117; }
+  #model-inspector::backdrop { background:rgba(0,0,0,0.78); }
+  #model-inspector .inspect-head { position:sticky; top:0; z-index:3; background:#161b22; border-bottom:1px solid #30363d; padding:13px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  #model-inspector .inspect-head h2 { font-size:1.08rem; color:#e6edf3; overflow-wrap:anywhere; }
+  #model-inspector .inspect-content { padding:15px; }
+  #model-inspector button { font:inherit; cursor:pointer; border:1px solid #3e5267; border-radius:5px; padding:5px 9px; background:#212f3f; color:#d1e9ff; }
+  #model-inspector button:focus-visible, #model-inspector a:focus-visible, #model-inspector input:focus-visible, #model-inspector textarea:focus-visible { outline:2px solid #58a6ff; outline-offset:2px; }
+  #model-inspector .inspect-status { color:#a5b9cb; margin:6px 0 12px; font-size:0.82rem; }
+  #model-inspector .inspect-facts { display:grid; grid-template-columns:minmax(110px,160px) 1fr; gap:7px 14px; margin:10px 0 16px; font-size:0.83rem; }
+  #model-inspector .inspect-facts dt { color:#93abc2; font-weight:600; }
+  #model-inspector .inspect-facts dd { margin:0; overflow-wrap:anywhere; }
+  #model-inspector h3 { font-size:0.97rem; color:#e6edf3; margin:16px 0 8px; }
+  #model-inspector details { border:1px solid #30363d; border-radius:6px; padding:9px; margin:8px 0; }
+  #model-inspector summary { cursor:pointer; font-weight:600; color:#abcdeb; }
+  #model-inspector pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:0.75rem; max-height:250px; overflow:auto; margin-top:10px; }
+  #model-inspector .inspect-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:9px 0; font-size:0.8rem; }
+  #model-inspector .inspect-controls input[type="search"] { min-width:150px; flex:1; background:#0d1117; border:1px solid #30363d; border-radius:5px; color:#e6edf3; padding:7px; }
+  #model-inspector .inspect-file-scroll { max-height:40vh; overflow:auto; border:1px solid #30363d; border-radius:6px; }
+  #model-inspector .inspect-file-table { border-collapse:collapse; width:100%; font-size:0.8rem; }
+  #model-inspector .inspect-file-table th { position:sticky; top:0; background:#161b22; color:#d8e9f7; text-align:left; padding:8px; border-bottom:1px solid #30363d; }
+  #model-inspector .inspect-file-table td { padding:7px 8px; border-bottom:1px solid #21262d; overflow-wrap:anywhere; }
+  #model-inspector .inspect-file-table td:nth-child(2) { text-align:right; white-space:nowrap; }
+  #model-inspector .inspect-file-table td:last-child { white-space:nowrap; }
+  #model-inspector .inspect-file-table a { color:#79bcff; margin-right:5px; }
+  #model-inspector .inspect-file-note { color:#a5b9cb; font-size:0.78rem; margin:7px 0; }
+  #model-inspector #inspector-link-fallback { margin-top:8px; width:100%; min-height:55px; background:#0d1117; color:#e6edf3; border:1px solid #3e5267; border-radius:5px; padding:8px; }
+  @media (max-width:600px) { #model-inspector .inspect-facts { grid-template-columns:1fr; gap:3px; } #model-inspector .inspect-file-table td:last-child { white-space:normal; } }
 </style>
 </head>
 <body>
@@ -362,6 +397,13 @@
   <span class="fiw"><input type="text" id="l4-model-filter" placeholder="Any quant model" title="Filters individual quant models within already-expanded L3 sections." autocomplete="off"><button type="button" class="fic" data-for="l4-model-filter" aria-label="Clear">✕</button></span>
 </div>
 <div id="scope-notice">Top 500 by downloads + top 500 by recent updates per pipeline tag, plus 1000 trending models — broader coverage of popular and recently active models. Older or niche models may not appear; use <a href="https://huggingface.co/models" target="_blank" rel="noopener noreferrer" aria-label="Hugging Face Search (opens in new tab)">HF Search</a> for full coverage.</div>
+
+<section id="inspect-lookup" aria-label="Inspect a specific model">
+  <label for="inspect-model-id">Inspect model by ID</label>
+  <input id="inspect-model-id" type="text" placeholder="owner/model-name" autocomplete="off" spellcheck="false">
+  <button id="inspect-model-go" type="button">Inspect</button>
+  <span id="inspect-lookup-result" role="status" aria-live="polite"></span>
+</section>
 <table id="main-table" aria-label="Authors and base model counts">
   <thead>
     <tr>
@@ -375,6 +417,29 @@
 </table>
 <div id="count"></div>
 </main>
+<dialog id="model-inspector" aria-labelledby="inspector-title">
+  <div class="inspect-head"><h2 id="inspector-title">Model inspector</h2><button id="inspector-close" type="button">Close</button></div>
+  <div class="inspect-content">
+    <p id="inspector-status" class="inspect-status" role="status" aria-live="polite"></p>
+    <div id="inspector-details"></div>
+    <section id="inspector-file-section" hidden aria-label="Repository files and download links">
+      <h3>Repository files and direct download links</h3>
+      <p id="inspector-file-revision" class="inspect-file-note"></p>
+      <div class="inspect-controls">
+        <label for="inspector-file-filter">Filename</label>
+        <input id="inspector-file-filter" type="search" placeholder="Filter filenames" autocomplete="off">
+        <label><input id="inspector-weights-only" type="checkbox"> Weights only</label>
+        <button id="inspector-copy-matching" type="button">Copy matching links</button>
+      </div>
+      <p id="inspector-file-notice" class="inspect-file-note" role="status"></p>
+      <div class="inspect-file-scroll">
+        <table class="inspect-file-table"><thead><tr><th scope="col">File</th><th scope="col">Size</th><th scope="col">Actions</th></tr></thead><tbody id="inspector-file-rows"></tbody></table>
+      </div>
+      <textarea id="inspector-link-fallback" hidden readonly aria-label="Select and copy download links"></textarea>
+    </section>
+  </div>
+</dialog>
+
 
 <script defer>
 (function() {
@@ -385,7 +450,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '261023.01';
+const APP_VERSION = '261023.02';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -1134,6 +1199,9 @@ function invalidateDomPrefix(prefix) { for (const k of _domCache) if (k[0].start
 
 // ── State Reset (Clear Cache) ──
 function resetAppState() {
+  _inspectorSession++;
+  const inspector = document.getElementById("model-inspector");
+  if (inspector && inspector.open) inspector.close();
   _fetchGeneration++;
   fetchedTasks.clear();
   fetchedUntagged = false;
@@ -1192,9 +1260,10 @@ function fetchJson(url) {
   _scheduleDequeue();
 
   _inflightFetches.set(url, promise);
-  promise.finally(() => {
+  const forget = () => {
     if (_inflightFetches.get(url) === promise) _inflightFetches.delete(url);
-  });
+  };
+  promise.then(forget, forget);
   return promise;
 }
 
@@ -3173,7 +3242,7 @@ function buildL2TableHtml(idx, author, sorted, state) {
     const zebra = mIdx % 2 === 0 ? "row-even" : "row-odd";
     const orphanBadge = qMethods.length ? qMethods.map(q => `<span class="badge orphan" title="Parent base model filtered out">${escapeHtml(q.toUpperCase())}</span>`).join(' ') + ' ' : '';
     return `<tr class="l2-row ${zebra}" data-l2-idx="${idx}" data-model-idx="${mIdx}" data-model="${escapeHtml(m.id)}" aria-rowindex="${rowIdx}">
-      <td class="model-id-cell" aria-colindex="1"><button type="button" class="toggle" id="t2-${idx}-${mIdx}" aria-expanded="false" aria-label="Expand ${escapeHtml(m.id)}">▶</button>${orphanBadge}<a href="https://huggingface.co/${escapeHtml(m.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}">${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}</a></td>
+      <td class="model-id-cell" aria-colindex="1"><button type="button" class="toggle" id="t2-${idx}-${mIdx}" aria-expanded="false" aria-label="Expand ${escapeHtml(m.id)}">▶</button>${orphanBadge}<a href="https://huggingface.co/${escapeHtml(m.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}">${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}</a><button type="button" class="model-inspect-btn" data-inspect-model="${escapeHtml(m.id)}" aria-label="Inspect ${escapeHtml(m.id)}">Inspect</button></td>
       <td class="center" aria-colindex="2">${escapeHtml(m.pipeline_tag || "(unknown)")}</td>
       <td class="center" aria-colindex="3" style="font-size:0.78rem">${paramBadgeHtml(m)}</td>
       <td class="right" aria-colindex="4">${fmt(m.downloads)}</td>
@@ -3590,7 +3659,7 @@ function renderL4(parentId, author, container) {
   // Optimized: Use map + join for table rows instead of forEach + +=
   html += sorted.map((q, qIdx) => {
     return `<tr class="l4-row" aria-rowindex="${2 + qIdx}">
-      <td class="model-id-cell" aria-colindex="1"><a href="https://huggingface.co/${escapeHtml(q.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}">${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}</a></td>
+      <td class="model-id-cell" aria-colindex="1"><a href="https://huggingface.co/${escapeHtml(q.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}">${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}</a><button type="button" class="model-inspect-btn" data-inspect-model="${escapeHtml(q.id)}" aria-label="Inspect ${escapeHtml(q.id)}">Inspect</button></td>
       <td class="center" aria-colindex="2">${escapeHtml(q.pipeline_tag || "(unknown)")}</td>
       <td class="center" aria-colindex="3"><span class="badge ${q.q_method === 'derivative' || q.q_method.includes('finetune') ? 'deriv' : ''}">${escapeHtml(q.q_method)}</span></td>
       <td class="right" aria-colindex="4">${fmt(q.downloads)}</td>
@@ -3796,6 +3865,340 @@ function applyLocalFilters() {
 }
 const debouncedSliderUpdate = debounce(applyLocalFilters, CONFIG.DEBOUNCE_MS);
 
+// ── Model Inspector (API-only) ──
+// Fetch full details on demand, render structured metadata locally, and generate
+// direct version-pinned download links from the model's repository manifest.
+let _inspectorSession = 0;
+const _inspectorState = { id: "", revision: "main", files: [], manifestNote: "" };
+const INSPECTOR_RENDER_LIMIT = 200;
+const INSPECTOR_COPY_LIMIT = 1000;
+
+function normalizeInspectorModelId(input) {
+  const parts = String(input || "").trim().split("/");
+  if (parts.length !== 2 || !parts.every(part =>
+    /^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$/.test(part) &&
+    part !== "." && part !== "..")) {
+    throw new Error("Enter a model ID in owner/model-name format.");
+  }
+  return parts.join("/");
+}
+
+function inspectorApiUrl(modelId) {
+  return "https://huggingface.co/api/models/" +
+    normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+}
+
+function validInspectorFilePath(path) {
+  return typeof path === "string" && path.length > 0 && path.length <= 1024 &&
+    path.split("/").every(part => part && part !== "." && part !== ".." &&
+      !/[\u0000-\u001f\u007f\\]/.test(part));
+}
+
+function inspectorDownloadUrl(modelId, revision, filename) {
+  const idPath = normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+  if (!validInspectorFilePath(filename)) throw new Error("Invalid repository filename.");
+  if (typeof revision !== "string" || !/^(?:[a-f0-9]{40}|main)$/i.test(revision)) {
+    throw new Error("Invalid pinned revision.");
+  }
+  return "https://huggingface.co/" + idPath + "/resolve/" +
+    encodeURIComponent(revision) + "/" + filename.split("/").map(encodeURIComponent).join("/") +
+    "?download=true";
+}
+
+function inspectorFileSize(entry) {
+  const n = entry && (entry.size ?? (entry.lfs && entry.lfs.size));
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+function inspectorIsWeight(path) {
+  return /\.(?:gguf|safetensors|bin|pt|pth|ckpt|onnx|h5|ggml|mlx)(?:\.index\.json)?$/i.test(path);
+}
+
+function buildInspectorManifest(siblings, tree) {
+  const map = new Map();
+  for (const entry of Array.isArray(siblings) ? siblings : []) {
+    const path = entry && (entry.rfilename || entry.path);
+    if (!validInspectorFilePath(path)) continue;
+    map.set(path, { path, size: inspectorFileSize(entry), weight: inspectorIsWeight(path) });
+  }
+  for (const entry of Array.isArray(tree) ? tree : []) {
+    const path = entry && (entry.path || entry.rfilename);
+    if (!validInspectorFilePath(path) || (entry.type && entry.type !== "file")) continue;
+    const n = inspectorFileSize(entry);
+    const current = map.get(path);
+    map.set(path, { path, size: n === null ? (current ? current.size : null) : n, weight: inspectorIsWeight(path) });
+  }
+  return [...map.values()].sort((a, b) =>
+    Number(b.weight) - Number(a.weight) || a.path.localeCompare(b.path));
+}
+
+function inspectorFileSizeLabel(bytes) {
+  if (bytes === null) return "—";
+  if (bytes === 0) return "0 B";
+  const scale = Math.min(4, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return (bytes / Math.pow(1024, scale)).toFixed(scale === 0 ? 0 : 2) +
+    " " + ["B", "KiB", "MiB", "GiB", "TiB"][scale];
+}
+
+function inspectorValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return text.length <= 400 ? text : text.slice(0, 397) + "…";
+}
+
+function inspectorFact(parent, name, value) {
+  if (value === null || value === undefined || value === "") return;
+  const term = document.createElement("dt");
+  term.textContent = name;
+  const description = document.createElement("dd");
+  description.textContent = inspectorValue(value);
+  parent.append(term, description);
+}
+
+function inspectorRenderedModelDetails(info) {
+  const root = document.getElementById("inspector-details");
+  root.replaceChildren();
+  const subtitle = document.createElement("p");
+  subtitle.className = "inspect-file-note";
+  subtitle.textContent = "Rendered from model API metadata. The full README body is not required.";
+  root.append(subtitle);
+
+  const facts = document.createElement("dl");
+  facts.className = "inspect-facts";
+  const card = info.cardData && typeof info.cardData === "object" ? info.cardData : {};
+  const config = info.config && typeof info.config === "object" ? info.config : {};
+  inspectorFact(facts, "Model", info.id || _inspectorState.id);
+  inspectorFact(facts, "Pipeline", info.pipeline_tag);
+  inspectorFact(facts, "Downloads", Number.isFinite(info.downloads) ? info.downloads.toLocaleString() : null);
+  inspectorFact(facts, "Likes", Number.isFinite(info.likes) ? info.likes.toLocaleString() : null);
+  inspectorFact(facts, "Updated", info.lastModified && String(info.lastModified).slice(0, 19));
+  inspectorFact(facts, "License", card.license || (Array.isArray(info.tags) && info.tags.find(tag => tag.startsWith("license:"))));
+  inspectorFact(facts, "Gated", info.gated === false ? "No" : (info.gated || "Unknown"));
+  inspectorFact(facts, "Languages", card.language);
+  inspectorFact(facts, "Base model", card.base_model);
+  inspectorFact(facts, "Architecture", config.architectures || info.transformersInfo?.auto_model);
+  inspectorFact(facts, "Model type", config.model_type);
+  inspectorFact(facts, "Context (model config)", config.max_position_embeddings);
+  inspectorFact(facts, "Revision", _inspectorState.revision);
+  inspectorFact(facts, "Tags", Array.isArray(info.tags) ? info.tags.slice(0, 24).join(", ") : null);
+  root.append(facts);
+
+  if (info.cardData && typeof info.cardData === "object") {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = "Structured model-card fields (API)";
+    const pre = document.createElement("pre");
+    const json = JSON.stringify(info.cardData, null, 2);
+    pre.textContent = json.length > 30000 ? json.slice(0, 30000) + "\n… (truncated)" : json;
+    details.append(summary, pre);
+    root.append(details);
+  }
+}
+
+function inspectorMatchingFiles() {
+  const term = document.getElementById("inspector-file-filter").value.toLowerCase().trim();
+  const weightsOnly = document.getElementById("inspector-weights-only").checked;
+  return _inspectorState.files.filter(file =>
+    (!weightsOnly || file.weight) && (!term || file.path.toLowerCase().includes(term)));
+}
+
+function renderInspectorFiles() {
+  const rows = document.getElementById("inspector-file-rows");
+  rows.replaceChildren();
+  const matches = inspectorMatchingFiles();
+  const first = matches.slice(0, INSPECTOR_RENDER_LIMIT);
+  for (const file of first) {
+    const tr = document.createElement("tr");
+    const name = document.createElement("td");
+    name.textContent = file.path;
+    const size = document.createElement("td");
+    size.textContent = inspectorFileSizeLabel(file.size);
+    const actions = document.createElement("td");
+    const url = inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, file.path);
+    const a = document.createElement("a");
+    a.textContent = "Download";
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.title = "Open the original file download URL";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy link";
+    copy.dataset.downloadPath = file.path;
+    copy.setAttribute("aria-label", "Copy direct download link for " + file.path);
+    actions.append(a, copy);
+    tr.append(name, size, actions);
+    rows.append(tr);
+  }
+  const count = matches.length;
+  document.getElementById("inspector-file-notice").textContent =
+    "Showing " + Math.min(count, INSPECTOR_RENDER_LIMIT) + " of " + count +
+    " matching files (" + _inspectorState.files.length + " total). " +
+    (_inspectorState.manifestNote || "File sizes depend on available metadata.");
+}
+
+async function inspectorCopyLinks(text) {
+  const status = document.getElementById("inspector-status");
+  const fallback = document.getElementById("inspector-link-fallback");
+  fallback.hidden = true;
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Download link(s) copied to clipboard.";
+      return;
+    } catch { /* Show a selectable fallback for local-file contexts. */ }
+  }
+  fallback.hidden = false;
+  fallback.value = text;
+  fallback.focus();
+  fallback.select();
+  status.textContent = "Clipboard access unavailable; select and copy the links shown below.";
+}
+
+async function inspectorFetchModelInfo(modelId) {
+  try {
+    return { info: await fetchJson(inspectorApiUrl(modelId) + "?full=true&cardData=true"), partial: false };
+  } catch (detailError) {
+    // Some API clients can list models even when a detail request fails. A
+    // listing match still supports a useful, explicitly partial inspection.
+    const name = modelId.split("/")[1];
+    for (const query of [modelId, name]) {
+      try {
+        const models = await fetchJson("https://huggingface.co/api/models?search=" +
+          encodeURIComponent(query) + "&sort=downloads&direction=-1&limit=100&full=true&cardData=true");
+        if (!Array.isArray(models)) continue;
+        const match = models.find(model => model && typeof model.id === "string" &&
+          model.id.toLowerCase() === modelId.toLowerCase());
+        if (match) return { info: match, partial: true };
+      } catch { /* Continue to another read-only search query. */ }
+    }
+    throw detailError;
+  }
+}
+
+async function openModelInspector(input) {
+  let requested;
+  try { requested = normalizeInspectorModelId(input); }
+  catch (error) {
+    document.getElementById("inspect-lookup-result").textContent = error.message;
+    return;
+  }
+  document.getElementById("inspect-lookup-result").textContent = "";
+  const dialog = document.getElementById("model-inspector");
+  const serial = ++_inspectorSession;
+  const generation = _fetchGeneration;
+  _inspectorState.id = requested;
+  _inspectorState.revision = "main";
+  _inspectorState.files = [];
+  _inspectorState.manifestNote = "";
+  document.getElementById("inspector-title").textContent = requested;
+  document.getElementById("inspector-details").replaceChildren();
+  document.getElementById("inspector-file-section").hidden = true;
+  document.getElementById("inspector-file-filter").value = "";
+  document.getElementById("inspector-weights-only").checked = false;
+  document.getElementById("inspector-link-fallback").hidden = true;
+  document.getElementById("inspector-status").textContent = "Fetching model metadata from selected API source…";
+  if (!dialog.open) dialog.showModal();
+
+  const current = () => serial === _inspectorSession && generation === _fetchGeneration && dialog.open;
+  try {
+    const { info, partial } = await inspectorFetchModelInfo(requested);
+    if (!current()) return;
+    if (!info || typeof info !== "object" || Array.isArray(info) || !info.id) {
+      throw new Error("The API returned no usable model information.");
+    }
+    const canonicalId = normalizeInspectorModelId(info.id);
+    if (canonicalId.toLowerCase() !== requested.toLowerCase()) {
+      throw new Error("The API returned an unexpected model identity.");
+    }
+    _inspectorState.id = canonicalId;
+    _inspectorState.revision = typeof info.sha === "string" && /^[a-f0-9]{40}$/i.test(info.sha) ? info.sha : "main";
+    _inspectorState.files = buildInspectorManifest(info.siblings, []);
+    _inspectorState.manifestNote = (partial ? "Partial model listing: individual detail metadata was unavailable. " : "") +
+      (_inspectorState.revision === "main" ?
+      "Revision was not supplied; download links reference the moving main branch." :
+      "Links use a pinned model revision.");
+    document.getElementById("inspector-title").textContent = canonicalId;
+    inspectorRenderedModelDetails(info);
+    const section = document.getElementById("inspector-file-section");
+    section.hidden = false;
+    document.getElementById("inspector-file-revision").textContent = "Download revision: " +
+      _inspectorState.revision + " — downloads use the original Hugging Face file endpoint.";
+    document.getElementById("inspector-status").textContent = partial ?
+      "Partial model metadata loaded from search. Checking repository file details…" :
+      "Model metadata loaded. Checking repository tree for file sizes…";
+    renderInspectorFiles();
+
+    try {
+      const tree = await fetchJson(inspectorApiUrl(canonicalId) +
+        "/tree/" + encodeURIComponent(_inspectorState.revision) + "?recursive=true");
+      if (!current()) return;
+      if (!Array.isArray(tree)) throw new Error("Unexpected repository tree response");
+      _inspectorState.files = buildInspectorManifest(info.siblings, tree);
+      _inspectorState.manifestNote += tree.length >= 1000 ?
+        " The tree endpoint may be paginated; filenames from the model API are also included." : "";
+      document.getElementById("inspector-status").textContent = "Model metadata and repository files loaded.";
+    } catch {
+      if (!current()) return;
+      _inspectorState.manifestNote += " Additional file-size metadata unavailable; using the model API file list.";
+      document.getElementById("inspector-status").textContent =
+        "Model metadata loaded. Repository tree unavailable; download links use available filenames.";
+    }
+    if (current()) renderInspectorFiles();
+  } catch (error) {
+    if (!current()) return;
+    document.getElementById("inspector-status").textContent =
+      "Could not inspect model: " + error.message +
+      ". Try a known public owner/model-name; listings may still work independently.";
+  }
+}
+
+function setupModelInspector() {
+  const dialog = document.getElementById("model-inspector");
+  const input = document.getElementById("inspect-model-id");
+  const submit = () => openModelInspector(input.value);
+  document.getElementById("inspect-model-go").addEventListener("click", submit);
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") { event.preventDefault(); submit(); }
+  });
+  document.getElementById("inspector-close").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => { _inspectorSession++; });
+  document.getElementById("inspector-file-filter").addEventListener("input", renderInspectorFiles);
+  document.getElementById("inspector-weights-only").addEventListener("change", renderInspectorFiles);
+
+  document.getElementById("inspector-copy-matching").addEventListener("click", () => {
+    const matching = inspectorMatchingFiles();
+    if (!matching.length) {
+      document.getElementById("inspector-status").textContent = "No matching files to copy.";
+      return;
+    }
+    if (matching.length > INSPECTOR_COPY_LIMIT) {
+      document.getElementById("inspector-status").textContent =
+        "Too many matching links; narrow the filename filter first (limit " + INSPECTOR_COPY_LIMIT + ").";
+      return;
+    }
+    const links = matching.map(file =>
+      inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, file.path));
+    inspectorCopyLinks(links.join("\n"));
+  });
+
+  document.getElementById("inspector-file-rows").addEventListener("click", event => {
+    const button = event.target.closest("button[data-download-path]");
+    if (!button) return;
+    inspectorCopyLinks(inspectorDownloadUrl(
+      _inspectorState.id, _inspectorState.revision, button.dataset.downloadPath));
+  });
+
+  // Capture before the existing L2 delegated row click, which otherwise expands.
+  document.getElementById("main-table").addEventListener("click", event => {
+    const button = event.target.closest("button[data-inspect-model]");
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openModelInspector(button.dataset.inspectModel);
+  }, true);
+}
+
 // ── RenderCoordinator Method Wiring ──
 RenderCoordinator.renderL1 = renderMain;
 RenderCoordinator.updateArrows = function() {
@@ -3869,6 +4272,7 @@ document.getElementById("hide-missing-param-chip").addEventListener("click", () 
 // ── Initialization (_initApp) ──
 function _initApp() {
   setupApiConnectionControls();
+  setupModelInspector();
   document.getElementById("ds-from").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ds-to").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ps-from").max = CONFIG.PARAM_SLIDER_MAX;
