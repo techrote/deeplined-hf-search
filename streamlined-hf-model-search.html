@@ -1347,6 +1347,8 @@ function fetchQueuedResource(url, responseType) {
 // Bound untrusted README responses before decoding or rendering them. The
 // queue retains cancellation, rate limiting and selected API transport.
 async function readLimitedTextResponse(response, limit = 1024 * 1024) {
+  const contentType = response.headers.get("content-type") || "";
+  if (/text\/html/i.test(contentType)) throw new Error("Unexpected HTML response instead of Markdown");
   const advertised = Number(response.headers.get("content-length"));
   if (Number.isFinite(advertised) && advertised > limit) {
     throw new Error("README exceeds the 1 MiB display limit");
@@ -4532,6 +4534,9 @@ async function loadInspectorReadme(modelId, revision, current) {
       markdown = await fetchText(inspectorReadmeUrl(modelId, revision, route));
       if (!current()) return;
       if (typeof markdown !== "string" || !markdown.trim()) throw new Error("Empty README response");
+      if (/^\s*(?:<!doctype\s+html\b|<html[\s>])/i.test(markdown)) {
+        throw new Error("README endpoint returned an HTML page instead of Markdown");
+      }
       break;
     } catch (error) {
       if (!current()) return;

@@ -255,3 +255,115 @@ test("L1 sort has derived model counts and latest update from visible models", (
   assert.equal(parent.aggBaseLikes, 8);
   assert.equal(parent.aggLatestUpdate, Date.parse("2026-10-21T00:00:00Z"));
 });
+
+
+test("README reader rejects an HTML block page before rendering", async () => {
+  const code = script[1];
+  const start = code.indexOf("async function readLimitedTextResponse(");
+  const end = code.indexOf("function _scheduleDequeue()", start);
+  const context = { TextDecoder, Uint8Array, Number };
+  vm.runInNewContext(code.slice(start, end) + "\nglobalThis.read = readLimitedTextResponse;", context);
+  await assert.rejects(
+    context.read(new Response("<html>Blocked</html>", {
+      headers: { "content-type": "text/html" }
+    })), /Unexpected HTML response/);
+});
+
+function streamingHarness({ failingFetch = false } = {}) {
+  const streamSource = script[1].split("// ── Browser-native file delivery ──")[1]
+    .split("function inspectorMatchingFiles()")[0];
+  assert.ok(streamSource, "Stream implementation missing");
+  const written = [];
+  const writes = { closed: false, aborted: false };
+  const writable = {
+    async write(bytes) { written.push(new Uint8Array(bytes)); },
+    async close() { writes.closed = true; },
+    async abort() { writes.aborted = true; }
+  };
+  const status = { textContent: "" }, cancel = { hidden: true };
+  const pickerCalls = [], fetchCalls = [];
+  const doc = { getElementById(id) {
+    if (id === "inspector-download-status") return status;
+    if (id === "inspector-cancel-save") return cancel;
+    throw new Error("Unexpected DOM element " + id);
+  }};
+  const ctx = {
+    URL, Date, AbortController, setTimeout, clearTimeout,
+    document: doc,
+    window: { async showSaveFilePicker(options) {
+      pickerCalls.push(options);
+      return { async createWritable() { return writable; } };
+    }},
+    _inspectorState: {
+      id: "Demo/Public-Model",
+      revision: "a".repeat(40),
+      files: [{ path: "assets/example.gguf", size: 4 }]
+    },
+    _inspectorSession: 1,
+    validInspectorFilePath: makeInspector().validInspectorFilePath,
+    inspectorDownloadUrl: makeInspector().inspectorDownloadUrl,
+    inspectorFileSizeLabel: makeInspector().inspectorFileSizeLabel,
+    fetch: async (url, init) => {
+      fetchCalls.push({ url, init });
+      if (failingFetch) throw new TypeError("Failed to fetch");
+      return new Response(new Uint8Array([1, 2, 3, 4]));
+    }
+  };
+  vm.runInNewContext(streamSource +
+    "\nglobalThis.downloadApi = {inspectorStreamSave,inspectorResolveDelivery,inspectorCancelFileTransfer};", ctx);
+  return { api: ctx.downloadApi, written, writes, status, cancel, pickerCalls, fetchCalls, ctx };
+}
+
+test("streamed save asks user for a destination and writes file chunks directly", async () => {
+  const h = streamingHarness();
+  await h.api.inspectorStreamSave("assets/example.gguf");
+  assert.equal(h.pickerCalls.length, 1);
+  assert.equal(h.pickerCalls[0].suggestedName, "example.gguf");
+  assert.equal(h.fetchCalls.length, 1);
+  assert.equal(h.fetchCalls[0].init.method, "GET");
+  assert.equal(h.fetchCalls[0].init.credentials, "omit");
+  assert.equal(h.fetchCalls[0].init.redirect, "follow");
+  assert.equal(h.fetchCalls[0].url,
+    "https://huggingface.co/Demo/Public-Model/resolve/" +
+    "a".repeat(40) + "/assets/example.gguf?download=true");
+  assert.deepEqual(Array.from(h.written[0]), [1, 2, 3, 4]);
+  assert.equal(h.writes.closed, true);
+  assert.equal(h.writes.aborted, false);
+  assert.equal(h.cancel.hidden, true);
+  assert.match(h.status.textContent, /Saved example\.gguf/);
+});
+
+test("stream failure is reported without claiming the download was saved", async () => {
+  const h = streamingHarness({ failingFetch: true });
+  await h.api.inspectorStreamSave("assets/example.gguf");
+  assert.equal(h.writes.closed, false);
+  assert.equal(h.cancel.hidden, true);
+  assert.match(h.status.textContent, /Browser streaming failed: Failed to fetch/);
+  assert.doesNotMatch(h.status.textContent, /Saved example\.gguf/);
+});
+
+test("a successful HEAD request offers a temporary resolved HTTPS address", async () => {
+  const h = streamingHarness();
+  const target = "https://cdn-lfs-us-1.hf.co/signed?token=example";
+  h.ctx.fetch = async (url, init) => {
+    h.fetchCalls.push({ url, init });
+    return { ok: true, url: target };
+  };
+  const links = [];
+  const parent = {
+    querySelector() { return null; },
+    append(el) { links.push(el); }
+  };
+  h.ctx.document.createElement = () => ({ dataset: {}, textContent: "" });
+  const button = { disabled: false, isConnected: true, parentElement: parent,
+    dataset: {}, textContent: "Resolve delivery URL" };
+  await h.api.inspectorResolveDelivery("assets/example.gguf", button);
+  assert.equal(h.fetchCalls[0].init.method, "HEAD");
+  assert.equal(h.fetchCalls[0].init.credentials, "omit");
+  assert.equal(h.fetchCalls[0].init.redirect, "follow");
+  assert.equal(links.length, 1);
+  assert.equal(links[0].href, target);
+  assert.equal(button.dataset.resolvedUrl, target);
+  assert.equal(button.disabled, false);
+  assert.match(h.status.textContent, /temporary URL may expire/);
+});
