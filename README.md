@@ -36,7 +36,18 @@ File URLs are pinned to the model revision SHA whenever available. Discovery
 still works in browsers where the model webpage is inaccessible, although
 API access may differ by browser or by endpoint. If individual model details
 fail, exact-match search results provide a partial fallback; no missing
-filenames are guessed. The full README body is not fetched by this feature.
+filenames are guessed. The inspector now displays the full README.md in a safe, locally rendered
+panel (plus raw Markdown), when that endpoint is accessible. The structured
+model API remains useful if README retrieval fails.
+
+The file list includes **Open URL**, **Save (stream)** and **Resolve delivery
+URL** options alongside **Copy link**. Browser streaming saves large files
+incrementally where the File System Access API and file-source CORS permit it;
+there is no promise that an inaccessible source URL can be fetched.
+
+The main author list has additional sorting for latest model update, matching
+derivative counts and average base-model downloads/likes, with ascending and
+descending choices.
 
 See [API inspector design and usage](docs/api-model-inspector.md).
 

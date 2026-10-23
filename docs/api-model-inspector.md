@@ -1,91 +1,92 @@
-# API-first model inspection and file links
+# API-first model inspection, README and file links
 
-Deeplined's four-level tree remains optimized for model discovery. The
-**Inspect** button next to any L2 base model or L4 derivative opens a local
-model inspector without opening the Hugging Face website. Alternatively,
-enter an exact owner/model-name in **Inspect model by ID**.
+Deeplined is a standalone model explorer. Select **Inspect** next to a base
+model or quantization, or enter an exact owner/model-name in the manual field.
+The inspector operates in the existing Direct or optional Gateway API mode.
 
-## Data sources
+## Model metadata
 
-1. The inspector requests /api/models/{owner}/{model}?full=true&cardData=true
-   through the existing API request queue and the selected Direct/Gateway
-   transport. Information is rendered locally as labelled fields: model ID,
-   pipeline, downloads, likes, revision, license, languages, model lineage,
-   architecture, model type, context configuration, tags, and structured
-   model-card metadata when provided.
-2. If the individual detail endpoint fails, Deeplined attempts read-only
-   /api/models?search=... listings and requires an **exact model ID match**
-   before rendering partial metadata. Some fields and files may be absent in
-   listing responses. The UI labels partial results.
-3. File names come from the individual model's siblings manifest. A separate
-   request to /api/models/{owner}/{model}/tree/{revision}?recursive=true
-   optionally adds sizes and file entries. Failure to retrieve a tree does
-   not invalidate filenames already supplied by the model-details API.
-4. File paths, model IDs, and revision segments are validated before
-   constructing links. When the model API returns a 40-character revision SHA,
-   all file links are pinned to it. Otherwise, main is used and visibly
-   identified as a mutable reference.
+The viewer fetches full structured details with the Hub's model information
+API, including pipeline, downloads, likes, license, tags, architecture, model
+card fields and a revision SHA when supplied. If a detail request fails, an
+exact-match model-search result can provide **partial** metadata. Missing
+fields are never inferred.
 
-**Important:** Hugging Face's cardData is structured card metadata, not
-necessarily the complete prose in README.md. This feature does not fetch
-or render the raw README. It remains functional when model-page navigation
-or raw README endpoints are unavailable.
+## README panel
 
-## File actions
+README.md is fetched on demand in the inspector from the model's revision.
+The reader tries the raw text path, then the resolve text path. It shares
+Deeplined's request queue and transport settings, applies a shorter timeout
+and caps text at 1 MiB. The content is rendered locally using safe DOM
+construction (headings, paragraphs, links, lists, code, quotes and tables),
+not as executable HTML. A Raw Markdown view preserves the original fetched
+text. Embedded HTML remains literal text and image links are not auto-loaded.
 
-The file table lists exact repository paths, size where available, a
-**Download** link and **Copy link** control for each file. All links target
-the original Hub /resolve/{revision}/{filename}?download=true endpoint.
-Deeplined does not proxy model weights, request multi-gigabyte files in
-JavaScript, or store copies locally.
+Some environments permit the model API but block raw or resolve file paths.
+In those circumstances the README panel reports a failure; the structured
+metadata and file lists still work. Neither the browser nor a gateway can
+guarantee that every Hub route is accessible.
 
-Use the filename search box and **Weights only** option to narrow the
-table. **Copy matching links** exports all filtered download URLs (up to
-1,000 entries). Rendering caps at 200 rows for responsiveness; filtering
-and link export operate on the whole available manifest. Browser clipboard
-policies vary, especially for local file:// pages: when programmatic
-copy is unavailable, Deeplined displays the links in a selectable text box.
+## Repository files
 
-Some Hub repositories contain multiple quantizations or multi-part files:
-download the matching shards and necessary configuration/tokenizer files
-for the chosen runtime. A working download is not guaranteed simply
-because a URL was constructed. Public access, gating, network policy,
-and file storage endpoints still apply.
+The file list uses API siblings and optionally a revision-specific tree
+request to supplement file sizes and paths. Download paths are validated.
+URLs are constructed from the original Hub's documented /resolve endpoint,
+and pinned to a 40-character SHA when one is available. Otherwise the
+viewer uses main and labels it as mutable.
 
-## Browser and security considerations
+Actions for each file:
 
-All inspection requests use the same browser and API transport as ordinary
-Deeplined searches. Browser-specific network policies can differ. The
-inspector does not modify DNS, OS proxy, VPN, TLS certificate stores or
-system routes, and does not bypass browser security restrictions.
+- **Open URL**: opens the standard Hub file URL; navigation may be filtered.
+- **Copy link**: copies the stable Hub URL for use in another downloader.
+- **Save (stream)**: where supported, requests a destination via the browser
+  File System Access API and streams file bytes directly from Fetch to disk.
+  It avoids buffering large weights in memory, supports cancellation, and
+  leaves no complete file if a transfer fails before commit. This is a
+  user-initiated GET; whether it succeeds depends on endpoint availability
+  and cross-origin rules. No gateway or third-party server is used.
+- **Resolve delivery URL**: makes a HEAD request and follows redirects without
+  fetching the model body. On success, an Open delivery URL link and a copy
+  option appear. A signed CDN address can expire; it is not persisted.
 
-- API payloads are untrusted and rendered using DOM textContent; model
-  IDs and filenames are validated before producing links.
-- No external Markdown renderer or third-party script is loaded.
-- The inspector cannot fetch gated/private files without their legitimate
-  access conditions being satisfied.
-- Clearing the cache or switching API sources cancels stale inspection
-  results. Closing the dialog also invalidates its pending responses.
-- The API tree may be paginated for repositories with very large numbers
-  of files. The inspector retains filenames from the model-info siblings
-  field and warns when a tree might be incomplete.
-- Availability of file-size metadata depends on the Hub response.
+Filename and weights-only filters apply to the complete available file
+manifest. Only the first 200 matching files are rendered for responsiveness;
+Copy matching links can export up to 1,000 selected URLs. Browser clipboard
+policies may require copying from a displayed text box.
 
-## Tests
+For multi-part models, select all relevant shards and their accompanying
+configuration files. A generated link does not certify file accessibility,
+gated permissions, completeness or license suitability.
 
-Run:
+## Author result sorting
+
+The top-level author results retain total-download, total-like, base-model
+count and author-name sorts. A new dropdown adds newest/oldest update,
+visible derivative count and average downloads/likes per visible canonical
+base model, with ascending/descending choices. Two additional table columns
+show matching derivatives and latest update; headers remain sortable.
+Metrics reflect active filters, not a global exhaustive Hub inventory.
+
+## Security and limitations
+
+No changes to OS networking, proxies, routing, VPN configuration or installed
+software are required. No auth headers or private tokens are introduced.
+File saves use direct browser requests; browser-specific CORS/security policy
+may prevent saving or CDN resolution even if API discovery succeeds.
+The optional gateway remains metadata-only and does not forward weights.
+
+The README renderer does not implement all of GitHub Flavored Markdown;
+unsupported syntax appears as text. Unsafe schemes in Markdown links are
+rejected. README rendering is bounded to 1,800 lines (full bounded response
+retained in the Raw Markdown panel).
+
+## Validation
 
     node --test tests/model-inspector-test.cjs
     node --test tests/network-transport-test.cjs tests/gateway-test.mjs
     node tests/phase5-test.js
 
-Model inspector regression coverage includes script syntax, safe identity
-and path handling, revision-pinned link construction, file lists and sizes,
-exact-match listing fallback, and L2/L4 action integration.
-
-Manual smoke checks: open Deeplined in a modern browser; fetch quick
-results; inspect a base model and a derivative; confirm the dialog shows
-structured API facts and files; check filename filtering, copy behaviour,
-direct links, closing/reopening, changing the backend, and stale-response
-cancellation. Also verify an API source which only supports listings: it
-must report partial results instead of inventing missing files.
+Manual smoke test the README on a public model, the file table links, copy
+actions, streamed download of a small config file, cancellation, HEAD URL
+resolution, browser CORS failure reporting, all author-sort options, filter
+changes and the expanded-row preservation lifecycle.

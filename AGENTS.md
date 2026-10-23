@@ -56,6 +56,27 @@ triggered. Preserve stale-request protection when changing API sources.
 See docs/api-model-inspector.md for design and:
 node --test tests/model-inspector-test.cjs for focused coverage.
 
+## README, streaming file save and author sorting
+
+README is untrusted Markdown. Render with safe DOM construction only;
+never insert raw model-card content into innerHTML. Keep fetchText on the
+existing queued transport and enforce the bounded plain-text response limit.
+A failed README request must not hide structured metadata or file links.
+
+File download links must originate from validated repository paths and
+revisions. The optional browser stream path must be explicitly user-initiated,
+use an incremental reader/writer instead of buffering large weight files,
+support cancellation, and report network and CORS failures accurately.
+No system-level network changes or unaudited file hosts.
+
+The expanded L1 sorts must derive from visible and canonical tree data.
+Do not change existing aggregate downloads/likes semantics; compute new
+derivative/average/latest metrics separately. New sort choices must stay
+in sync with header arrows and RenderCoordinator.
+
+Focused tests: node --test tests/model-inspector-test.cjs.
+See docs/api-model-inspector.md for feature limits.
+
 ## Testing
 
 Open in browser, validate:

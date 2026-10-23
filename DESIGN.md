@@ -255,3 +255,31 @@ oversized pages and clipboard payloads. Inspector serial and fetch-generation
 guards suppress stale results when users change sources or close the dialog.
 
 See docs/api-model-inspector.md for full contracts and acceptance checks.
+
+---
+
+## README, File Delivery and Extended Author Sorting (v261023.03)
+
+- Plain text README responses are fetched through the existing request manager,
+  preserving source selection, queue throttling and generation cancellation.
+  README reads have a 1 MiB streaming cap, a shorter timeout and no retries.
+  First attempt /raw/{revision}/README.md, then /resolve/{revision}/README.md.
+- The inspector renders a safe Markdown subset using DOM text nodes/elements,
+  never evaluates repository HTML, and provides the original bounded Markdown
+  separately. README unavailability does not block structured metadata/files.
+- The standard /resolve/{revision}/{path}?download=true links remain available.
+  They are valid Hub file URLs, but browser navigation may be restricted even
+  when metadata fetches work. A user-initiated File System Access API path
+  streams a GET response directly to a selected file in supported browsers;
+  no full-model response buffering or local service is involved. Cancellation
+  aborts the request and discards the incomplete output.
+- An optional HEAD request follows the file delivery redirect, revealing a
+  short-lived CDN URL only if CORS permits it. Network/CORS rejection is
+  reported without claiming a successful download. No CDN addresses persist.
+- The main author table now exposes derivative count and last updated date.
+  Its sort selector additionally offers name, totals, recency, derivative count,
+  and average base-model downloads/likes, each in both directions. Derived
+  metrics use admitted/visible canonical bases and visible derivatives,
+  respecting existing date, task, quantization and text filters.
+- Sorting remains local, deterministic, and is mediated by RenderCoordinator
+  to preserve its expansion/rerender lifecycle.
