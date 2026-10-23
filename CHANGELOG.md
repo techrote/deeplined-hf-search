@@ -1,5 +1,27 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.03 — Automatic candidate discovery and simpler search controls
+
+- Standard name searches now derive a candidate hint from required literal text: `npc` and `*npc*` fetch relevant Hub candidates before full matching.
+- Moved manual hint, candidate sort, and sample limit into collapsed Advanced options.
+- Added automatic/manual/broad scope messages and guidance for empty samples. Excluded terms, card-only text, and regex syntax never become automatic name hints.
+- Added regression coverage for seed extraction, hint overrides, broad-sample fallbacks, and collapsed controls.
+
+### v261023.02 — Default advanced syntax with optional regex mode
+
+- Made standard advanced search the default, with required (+ or unprefixed) terms, excluded (-) terms, quoted phrases, backslash escapes, single-character (?) and variable-length (*) wildcards.
+- Added explicit wildcard lengths: *{n}, *{min,max}, and *{min,}; validates ranges and incomplete queries before requests.
+- Added a regex checkbox that changes both inputs and reveals regex flags; flags are hidden, disabled, and ignored in standard mode. Search text is preserved when switching modes.
+- Kept worker timeouts, card caching, sampled coverage, and cancellation for both modes; expanded tests to cover advanced parsing, Unicode wildcards, literal regex punctuation, negative-only queries, malformed syntax, and mode controls.
+
+### v261023.01 — Regex search for model names and cards
+
+- Added independent regex discovery with optional candidate name query, Hub sort, and a 1–500 model limit; clearly labels sampled coverage and independence from explorer filters.
+- Supports ANDed name/README patterns, `imsu` flags, progress, cancellation, escaped match previews, and counts for unavailable or oversized cards.
+- Runs regex compilation/matching in a disposable worker with a timeout; invalid patterns do not trigger candidate requests.
+- Extended the shared rate-limited queue to read raw cards, added a revision-keyed bounded card cache, and guarded asynchronous results against stopped or stale runs.
+- Added regression tests covering worker timeouts, matching semantics, card failures, caching, cancellation, generation changes, and typed queue cleanup.
+
 ### v260603.01 — Two-phase orphan promotion: fall back to L2 when parent not in tree
 
 - **Fix:** Added Phase 2 to `upsertModelIntoTree` that promotes quant models to their
