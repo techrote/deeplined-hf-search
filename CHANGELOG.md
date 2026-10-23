@@ -1,5 +1,12 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.03 — Automatic candidate discovery and simpler search controls
+
+- Standard name searches now derive a candidate hint from required literal text: `npc` and `*npc*` fetch relevant Hub candidates before full matching.
+- Moved manual hint, candidate sort, and sample limit into collapsed Advanced options.
+- Added automatic/manual/broad scope messages and guidance for empty samples. Excluded terms, card-only text, and regex syntax never become automatic name hints.
+- Added regression coverage for seed extraction, hint overrides, broad-sample fallbacks, and collapsed controls.
+
 ### v261023.02 — Default advanced syntax with optional regex mode
 
 - Made standard advanced search the default, with required (+ or unprefixed) terms, excluded (-) terms, quoted phrases, backslash escapes, single-character (?) and variable-length (*) wildcards.

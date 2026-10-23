@@ -252,6 +252,8 @@
   .regex-fields label { display: flex; flex-direction: column; gap: 5px; font-size: .85rem; }
   .regex-fields label[hidden] { display: none; }
   .search-mode-toggle { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .85rem; }
+  #search-advanced { margin: 12px 0; border-top: 1px solid #30363d; padding-top: 10px; }
+  #search-advanced summary { cursor: pointer; font-size: .85rem; color: #58a6ff; }
   .regex-fields input, .regex-fields select { width: 100%; background: #0d1117; color: #e6edf3; border: 1px solid #484f58; border-radius: 4px; padding: 8px; }
   #regex-search button { padding: 7px 12px; margin-right: 8px; cursor: pointer; }
   #regex-search button:disabled { cursor: default; opacity: .5; }
@@ -270,17 +272,23 @@
 <main>
 <section id="regex-search" aria-labelledby="regex-search-title">
   <h2 id="regex-search-title">Advanced search · model names and cards</h2>
-  <p id="regex-scope">Search a sample of up to 500 models from the Hub. The optional candidate query narrows model names before advanced matching. This is not a full-Hub card index; the explorer filters below do not apply to this search.</p>
+  <p id="regex-scope">Name searches automatically fetch relevant models from the Hub before applying your full query. Card-only searches and regex searches without a name hint scan a broader sample. This is not a full-Hub card index; the explorer filters below do not apply here.</p>
   <form id="regex-search-form" aria-describedby="regex-scope standard-search-help">
     <label class="search-mode-toggle"><input type="checkbox" id="regex-mode" aria-controls="regex-flags-label regex-help standard-search-help">Use regular expressions</label>
     <div class="regex-fields">
-      <label>Candidate name query (optional)<input id="regex-candidates" placeholder="e.g. Qwen" maxlength="200"></label>
       <label><span id="search-name-label">Model name search (optional)</span><input id="regex-name" placeholder="e.g. +Qwen +7B -GPTQ *GGUF" maxlength="1000" spellcheck="false"></label>
       <label><span id="search-card-label">Model card search (optional)</span><input id="regex-card" placeholder='e.g. +"tool calling" -experimental' maxlength="1000" spellcheck="false"></label>
       <label id="regex-flags-label" hidden>Regex flags<input id="regex-flags" value="i" maxlength="4" spellcheck="false" disabled aria-describedby="regex-help"></label>
-      <label>Candidate sort<select id="regex-sort"><option value="downloads">Most downloaded</option><option value="likes">Most liked</option><option value="lastModified">Recently updated</option><option value="trendingScore">Trending</option></select></label>
-      <label>Candidate limit<input id="regex-limit" type="number" min="1" max="500" value="50" required></label>
     </div>
+    <details id="search-advanced">
+      <summary>Advanced options · sampling and candidate hints</summary>
+      <div class="regex-fields">
+        <label>Candidate name hint (optional override)<input id="regex-candidates" placeholder="Automatic from name search" maxlength="200"></label>
+        <label>Candidate sort<select id="regex-sort"><option value="downloads">Most downloaded</option><option value="likes">Most liked</option><option value="lastModified">Recently updated</option><option value="trendingScore">Trending</option></select></label>
+        <label>Candidate limit<input id="regex-limit" type="number" min="1" max="500" value="50" required></label>
+      </div>
+      <p>A hint overrides automatic discovery and searches names only. Leave it empty for automatic discovery. Up to the selected number of candidates are checked; more may exist. For card-only or regex searches, a name hint can narrow the sample but will omit models that mention the term only in their cards.</p>
+    </details>
     <p id="standard-search-help">All terms are required (AND), with or without +. Use -term to exclude, "exact phrase" for adjacent text, ? for exactly one character, and * for any number of characters (including spaces/newlines). Use *{2,5} for 2–5 characters, *{3} for exactly 3, or *{2,} for 2 or more (bounds up to 10,000). Escape operators with a backslash, e.g. \* for a literal star. Matching is case-insensitive and terms may occur anywhere in the text. If both name and card searches are supplied, both must match. Cards include raw README.md and YAML metadata.</p>
     <p id="regex-help" hidden>Enter patterns without /delimiters/. Flags: i = ignore case, m = multiline anchors, s = dot matches newlines, u = Unicode. Supply at least one pattern; when both are supplied, both must match. Names include author/model. Cards are raw README.md text, including YAML metadata; each name-matching candidate may need one extra request.</p>
     <button type="submit" id="regex-run">Search</button><button type="button" id="regex-stop" disabled>Stop search</button>
@@ -393,7 +401,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '261023.02';
+const APP_VERSION = '261023.03';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -1233,16 +1241,20 @@ function parseAdvancedQuery(query) {
     if (/\s/.test(query[i])) { i++; continue; }
     let exclude = false;
     if (query[i] === '+' || query[i] === '-') { exclude = query[i] === '-'; i++; }
-    let source = '', quoted = false, hasContent = false;
+    let source = '', quoted = false, hasContent = false, segment = '';
+    const literals = [];
     while (i < query.length && (quoted || !/\s/.test(query[i]))) {
       const char = query[i++];
       if (char === '\\') {
         if (i >= query.length) throw new Error('A trailing backslash must escape a character.');
-        source += literal(query[i++]);
+        const escaped = query[i++];
+        source += literal(escaped);
+        segment += escaped;
         hasContent = true;
       } else if (char === '"') {
         quoted = !quoted;
       } else if (char === '*' || char === '?') {
+        if (segment) { literals.push(segment); segment = ''; }
         hasContent = true;
         if (char === '*' && query[i] === '{') {
           const range = query.slice(i).match(/^\{(\d+)(?:,(\d*))?\}/);
@@ -1257,12 +1269,14 @@ function parseAdvancedQuery(query) {
         }
       } else {
         source += literal(char);
+        segment += char;
         hasContent = true;
       }
     }
     if (quoted) throw new Error('Close the quoted phrase with a double quote.');
     if (!hasContent) throw new Error('Add a term after + or -, and do not use empty quotes.');
-    terms.push({ source, exclude });
+    if (segment) literals.push(segment);
+    terms.push({ source, exclude, literals });
   }
   return terms;
 }
@@ -1276,7 +1290,12 @@ function regexWorkerMain() {
           ? (query ? [{ pattern: new RegExp(query, data.flags), exclude: false }] : [])
           : parseAdvancedQuery(query).map(term => ({ pattern: new RegExp(term.source, 'iu'), exclude: term.exclude }));
         patterns = { name: compile(data.name), card: compile(data.card) };
-        self.postMessage({ ok: true });
+        const seeds = data.mode === 'regex' ? [] : parseAdvancedQuery(data.name)
+          .filter(term => !term.exclude)
+          .flatMap(term => term.literals.flatMap(text => text.match(/[\p{L}\p{N}_-]+/gu) || []))
+          .filter(text => text.length >= 2);
+        seeds.sort((a, b) => b.length - a.length);
+        self.postMessage({ ok: true, seed: seeds[0] || '' });
         return;
       }
       let match = null;
@@ -1390,7 +1409,7 @@ async function runRegexSearch(event) {
   if (name.length > 1000 || card.length > 1000) { regexStatus('Queries must be at most 1,000 characters.', true); return; }
   if (mode === 'regex' && (!/^[imsu]*$/.test(flags) || new Set(flags).size !== flags.length)) { regexStatus('Use each supported flag at most once: i, m, s, u.', true); return; }
   if (!Number.isInteger(limit) || limit < 1 || limit > 500) { regexStatus('Choose a candidate limit from 1 to 500.', true); return; }
-  const query = value('regex-candidates').trim();
+  const hint = value('regex-candidates').trim();
   const sort = value('regex-sort');
   const run = { matcher: null, checked: 0, total: 0, matches: 0, unavailable: 0, oversized: 0 };
   _regexRun = run;
@@ -1399,11 +1418,15 @@ async function runRegexSearch(event) {
   regexStatus('Validating search…');
   try {
     run.matcher = createRegexMatcher();
-    await run.matcher.request({ type: 'init', mode, name, card, flags }, 3000);
+    const prepared = await run.matcher.request({ type: 'init', mode, name, card, flags }, 3000);
     if (!current()) return;
+    const query = hint || prepared.seed;
+    const scope = query
+      ? `Names containing “${query}” (${hint ? 'manual hint' : 'automatic'}).`
+      : 'Broad sample: no required name text to narrow discovery. Add a name hint under Advanced options to target a family.';
     document.querySelector('#regex-results tbody').replaceChildren();
     document.getElementById('regex-results').hidden = true;
-    regexStatus(`Fetching up to ${limit} candidates${query ? ` for “${query}”` : ''}…`);
+    regexStatus(`Fetching up to ${limit} candidates… ${scope}`);
     const params = new URLSearchParams({ sort, direction: '-1', limit: String(limit), full: 'true' });
     if (query) params.set('search', query);
     const raw = await fetchJson(`https://huggingface.co/api/models?${params}`);
@@ -1452,7 +1475,7 @@ async function runRegexSearch(event) {
       regexStatus(`Scanning… ${regexSummary(run)}`);
     }
     if (!current()) return;
-    regexStatus(`Complete. ${regexSummary(run)}. Results cover only these candidates, not the entire Hub.`);
+    regexStatus(`Complete. ${regexSummary(run)}. ${scope} Results cover only these candidates, not the entire Hub.${run.matches === 0 ? ' No matches in this sample; try a larger limit or a different candidate hint in Advanced options.' : ''}`);
   } catch (error) {
     if (_regexRun === run) regexStatus(`${error.message} ${regexSummary(run)}. Any displayed results are partial.`, true);
   } finally {

@@ -4,9 +4,9 @@
 
 Open `streamlined-hf-model-search.html` in a modern browser. The **Advanced search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata). Standard advanced syntax is the default; enable **Use regular expressions** for regex inputs and flags.
 
-1. Optionally enter a **Candidate name query**, such as `Qwen`. This is ordinary Hub name search, not advanced syntax or card search.
-2. Enter a name query, a card query, or both. When both are provided, a model must match both. For example, name `+Qwen +7B -GPTQ *GGUF` and card `+"tool calling" -experimental`.
-3. Choose candidate sort and a limit between 1 and 500, then click **Search**. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
+1. Enter a name query, a card query, or both. When both are provided, a model must match both. For example, name `+Qwen +7B -GPTQ *GGUF` and card `+"tool calling" -experimental`.
+2. Click **Search**. Required literal text in a standard name query automatically retrieves relevant Hub candidates: `npc` and `*npc*` both retrieve NPC candidates first, then apply the complete query. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
+3. If needed, expand **Advanced options** to override the automatic name hint, change candidate sort, or adjust the 1–500 candidate limit. These controls are collapsed by default.
 
 Standard search matches case-insensitively anywhere in the text. All terms are ANDed, whether or not they have a `+` prefix. This is Google-style syntax, not Google's ranking or query-expansion behavior:
 
@@ -25,7 +25,9 @@ Wildcard bounds must be ordered nonnegative integers up to 10,000. Quotes may co
 
 For regex mode, toggle **Use regular expressions** and enter patterns without `/delimiters/`, e.g. name `Qwen.*(7B|8B).*GGUF$` and card `tool[ -]?calling|function calling`. Choose `i`, `m`, `s`, and/or `u` flags. Flags are hidden and ignored in standard mode. Toggling modes preserves the input text; it does not translate between query languages.
 
-This scans a bounded candidate sample, **not all cards on the Hub**. Leave the candidate query empty to scan top models in the selected sort order. Narrow the query to increase coverage of a family; broaden it if you are looking for a term present only in cards. The explorer's date, parameter, and quantization filters below are independent of this search panel.
+This scans a bounded candidate sample, **not all cards on the Hub**. Automatic discovery picks the longest alphanumeric/name fragment of at least two characters from required name terms; wildcard gaps and excluded terms cannot become hints. The complete query still filters the returned candidates, including any fuzzy Hub results. The status reports whether discovery was automatic, manually overridden, or a broad sample.
+
+Card-only, negative-only, wildcard-only, and regex searches without a manual name hint scan top models in the selected sort order and explicitly report that broad scope. Card text is never inferred as a name hint: doing so would exclude models that mention a term only in their cards. A manual hint overrides automatic discovery and searches names only. The explorer's date, parameter, and quantization filters below are independent of this search panel.
 
 Card scans use one additional request per name-matching candidate, through the existing shared rate limiter. Successful cards are cached by revision (up to 200); **Clear Cache** clears them. Missing, gated, or otherwise unreadable cards and cards over 1 MB are counted as skipped, not searched. Readme content is never rendered as HTML. Both search modes run in a disposable Web Worker with a 300 ms matching timeout so expensive expressions cannot freeze the UI.
 

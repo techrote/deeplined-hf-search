@@ -260,5 +260,43 @@ async function until(predicate) {
   assert.equal(calls.length, 0);
   assert.equal(element('regex-run').disabled, false);
   console.log('PASS: invalid advanced syntax is rejected before network requests');
+
+  assert.match(html, /<details id="search-advanced">/);
+  const advancedOptions = html.match(/<details id="search-advanced">([\s\S]*?)<\/details>/)[1];
+  for (const id of ['regex-candidates', 'regex-sort', 'regex-limit']) assert(advancedOptions.includes(`id="${id}"`));
+  for (const query of ['npc', '*npc*', '+npc -gptq', '"npc model"', 'n?pc*model']) {
+    setup({ name: query });
+    element('regex-mode').checked = false;
+    handler = url => {
+      const seed = new URL(url).searchParams.get('search');
+      assert.equal(seed, query.includes('model') ? 'model' : 'npc');
+      return response([{ id: query.startsWith('"') ? 'Org/npc model' : query.includes('?') ? 'Org/nxpc-model' : 'Org/npc-model' }]);
+    };
+    await run();
+    assert.match(status(), /1 matches/);
+    assert.match(status(), /automatic/);
+  }
+  console.log('PASS: npc and wildcard/phrase/required name queries fetch relevant Hub candidates automatically');
+
+  setup({ name: '*npc*', candidates: 'Roleplay' });
+  element('regex-mode').checked = false;
+  handler = url => { assert.equal(new URL(url).searchParams.get('search'), 'Roleplay'); return response([]); };
+  await run();
+  assert.match(status(), /manual hint/);
+  assert.match(status(), /No matches in this sample/);
+  console.log('PASS: explicit candidate hint overrides automatic discovery and empty results explain sample limits');
+
+  for (const options of [{ name: '-npc' }, { name: '*?*' }, { card: 'npc' }]) {
+    setup(options);
+    element('regex-mode').checked = false;
+    handler = url => { assert.equal(new URL(url).searchParams.has('search'), false); return response([]); };
+    await run();
+    assert.match(status(), /Broad sample/);
+  }
+  setup({ name: 'npc|roleplay' });
+  handler = url => { assert.equal(new URL(url).searchParams.has('search'), false); return response([]); };
+  await run();
+  assert.match(status(), /Broad sample/);
+  console.log('PASS: card terms, exclusions, wildcard-only queries and regex never become unsafe name hints');
   console.log('All regex-search tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
