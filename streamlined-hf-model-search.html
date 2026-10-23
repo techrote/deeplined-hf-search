@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HuggingFace Base Models</title>
+<title>Deeplined HF Search</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🔍</text></svg>">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -245,12 +245,45 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; }
   }
+  #regex-search { border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 20px; background: #161b22; }
+  #regex-search h2 { font-size: 1rem; margin-bottom: 8px; }
+  #regex-search p { color: #8b949e; font-size: .85rem; margin: 8px 0; line-height: 1.5; }
+  .regex-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 12px 0; }
+  .regex-fields label { display: flex; flex-direction: column; gap: 5px; font-size: .85rem; }
+  .regex-fields input, .regex-fields select { width: 100%; background: #0d1117; color: #e6edf3; border: 1px solid #484f58; border-radius: 4px; padding: 8px; }
+  #regex-search button { padding: 7px 12px; margin-right: 8px; cursor: pointer; }
+  #regex-search button:disabled { cursor: default; opacity: .5; }
+  #regex-search-status { min-height: 1.5em; margin-top: 12px; font-size: .85rem; white-space: pre-wrap; }
+  #regex-search-status[data-error="true"] { color: #ff7b72; }
+  #regex-results-wrap { overflow-x: auto; }
+  #regex-results { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: .85rem; }
+  #regex-results th { position: static; cursor: default; }
+  #regex-results td { padding: 8px 10px; border-bottom: 1px solid #30363d; vertical-align: top; }
+  #regex-results .regex-snippet { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 500px; }
 </style>
 </head>
 <body>
 <a href="#main-table" class="skip-link">Skip to main content</a>
-<h1><span aria-hidden="true">🔍</span> A Streamlined Hugging Face Model Search</h1>
+<h1><span aria-hidden="true">🔍</span> Deeplined HF Search</h1>
 <main>
+<section id="regex-search" aria-labelledby="regex-search-title">
+  <h2 id="regex-search-title">Regex search · model names and cards</h2>
+  <p id="regex-scope">Search a sample of up to 500 models from the Hub. The optional candidate query searches model names before regex matching. This is not a full-Hub card index; the explorer filters below do not apply to this search.</p>
+  <form id="regex-search-form" aria-describedby="regex-scope regex-help">
+    <div class="regex-fields">
+      <label>Candidate name query (optional)<input id="regex-candidates" placeholder="e.g. Qwen" maxlength="200"></label>
+      <label>Model name regex (optional)<input id="regex-name" placeholder="e.g. Qwen.*(7B|8B).*GGUF$" maxlength="1000" spellcheck="false"></label>
+      <label>Model card regex (optional)<input id="regex-card" placeholder="e.g. tool[ -]?calling|function calling" maxlength="1000" spellcheck="false"></label>
+      <label>Regex flags<input id="regex-flags" value="i" maxlength="4" spellcheck="false" aria-describedby="regex-help"></label>
+      <label>Candidate sort<select id="regex-sort"><option value="downloads">Most downloaded</option><option value="likes">Most liked</option><option value="lastModified">Recently updated</option><option value="trendingScore">Trending</option></select></label>
+      <label>Candidate limit<input id="regex-limit" type="number" min="1" max="500" value="50" required></label>
+    </div>
+    <p id="regex-help">Enter patterns without /delimiters/. Flags: i = ignore case, m = multiline anchors, s = dot matches newlines, u = Unicode. Supply at least one pattern; when both are supplied, both must match. Names include author/model. Cards are raw README.md text, including YAML metadata; each name-matching candidate may need one extra request.</p>
+    <button type="submit" id="regex-run">Search with regex</button><button type="button" id="regex-stop" disabled>Stop search</button>
+  </form>
+  <div id="regex-search-status" role="status" aria-live="polite">Ready. Try a name pattern, a card pattern, or both.</div>
+  <div id="regex-results-wrap"><table id="regex-results" hidden><caption>Regex matches, in candidate sort order</caption><thead><tr><th scope="col">Model</th><th scope="col">Downloads</th><th scope="col">Likes</th><th scope="col">Matching text</th></tr></thead><tbody></tbody></table></div>
+</section>
 <div id="status-bar"><div id="status" aria-live="polite">Fetching models…</div><span id="version"></span></div>
 <div id="date-slider">
   <h2 class="ds-title">Date Range</h2>
@@ -356,7 +389,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '260606.01';
+const APP_VERSION = '261023.01';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -996,6 +1029,8 @@ function invalidateDomPrefix(prefix) { for (const k of _domCache) if (k[0].start
 
 // ── State Reset (Clear Cache) ──
 function resetAppState() {
+  stopRegexSearch();
+  _regexCardCache.clear();
   _fetchGeneration++;
   fetchedTasks.clear();
   fetchedUntagged = false;
@@ -1042,19 +1077,21 @@ let _uiRafId = null;
 
 // ── Queue-based API Request Manager ──
 //   fetchJson → _scheduleDequeue → _dequeueNext → _dispatchFetchWithRetry
-function fetchJson(url) {
-  const existing = _inflightFetches.get(url);
+function fetchJson(url) { return fetchResource(url, 'json'); }
+function fetchText(url) { return fetchResource(url, 'text'); }
+function fetchResource(url, responseType) {
+  const key = `${responseType}:${url}`;
+  const existing = _inflightFetches.get(key);
   if (existing) return existing;
 
   let resolve, reject;
   const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
-  _workQueue.push({ url, resolve, reject });
+  _workQueue.push({ url, responseType, resolve, reject });
   _scheduleDequeue();
 
-  _inflightFetches.set(url, promise);
-  promise.finally(() => {
-    if (_inflightFetches.get(url) === promise) _inflightFetches.delete(url);
-  });
+  _inflightFetches.set(key, promise);
+  const cleanup = () => { if (_inflightFetches.get(key) === promise) _inflightFetches.delete(key); };
+  promise.then(cleanup, cleanup);
   return promise;
 }
 
@@ -1117,7 +1154,7 @@ function _dispatchFetchWithRetry(item, gen, retries) {
         _totalBytesReceived += new TextEncoder().encode(text).length;
         incApiCalls(1);
         let data;
-        try { data = JSON.parse(text); } catch (e) {
+        try { data = item.responseType === 'text' ? text : JSON.parse(text); } catch (e) {
           _inflightCount--;
           item.reject(new Error("Invalid JSON response"));
           _dequeueNext();
@@ -1178,6 +1215,188 @@ function _dispatchFetchWithRetry(item, gen, retries) {
         _dequeueNext();
       }
     });
+}
+
+// ── Regex Search ──
+const _regexCardCache = new Map();
+let _regexRun = null;
+
+function regexWorkerMain() {
+  let patterns;
+  self.onmessage = ({ data }) => {
+    try {
+      if (data.type === 'init') {
+        patterns = {
+          name: data.name ? new RegExp(data.name, data.flags) : null,
+          card: data.card ? new RegExp(data.card, data.flags) : null
+        };
+        self.postMessage({ ok: true });
+        return;
+      }
+      const pattern = patterns[data.field];
+      const match = pattern ? pattern.exec(data.text) : null;
+      const start = match ? Math.max(0, match.index - 70) : 0;
+      const end = match ? Math.min(data.text.length, match.index + Math.min(match[0].length, 200) + 100) : 0;
+      self.postMessage({ matched: !pattern || !!match, snippet: match ? (start ? '…' : '') + data.text.slice(start, end) + (end < data.text.length ? '…' : '') : '' });
+    } catch (error) {
+      self.postMessage({ error: error.message });
+    }
+  };
+}
+
+function createRegexMatcher() {
+  const url = URL.createObjectURL(new Blob([`(${regexWorkerMain.toString()})()`], { type: 'text/javascript' }));
+  let worker;
+  try { worker = new Worker(url); } finally { URL.revokeObjectURL(url); }
+  let pending = null;
+  const close = () => {
+    worker.terminate();
+    if (pending) { const reject = pending.reject; clearTimeout(pending.timer); pending = null; reject(new Error('Search stopped.')); }
+  };
+  const request = (data, timeout = 300) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending = null;
+      worker.terminate();
+      reject(new Error('Regex took too long. Simplify the pattern and try again.'));
+    }, timeout);
+    pending = { reject, timer };
+    worker.onmessage = ({ data: result }) => {
+      clearTimeout(timer);
+      pending = null;
+      if (result.error) reject(new Error(`Invalid regex: ${result.error}`));
+      else resolve(result);
+    };
+    worker.onerror = event => {
+      event.preventDefault();
+      clearTimeout(timer);
+      pending = null;
+      reject(new Error('Regex worker failed. Open this file in a browser that supports Web Workers.'));
+    };
+    worker.postMessage(data);
+  });
+  return { request, close };
+}
+
+function regexStatus(text, error = false) {
+  const status = document.getElementById('regex-search-status');
+  status.textContent = text;
+  status.dataset.error = String(error);
+}
+
+function setRegexBusy(busy) {
+  for (const element of document.getElementById('regex-search-form').elements) {
+    element.disabled = element.id === 'regex-stop' ? !busy : busy;
+  }
+}
+
+function regexSummary(run) {
+  return `${run.matches} matches · ${run.checked}/${run.total} candidates checked · ${run.unavailable} cards unavailable · ${run.oversized} cards over 1 MB skipped`;
+}
+
+function stopRegexSearch() {
+  if (!_regexRun) return;
+  const run = _regexRun;
+  _regexRun = null;
+  run.matcher?.close();
+  setRegexBusy(false);
+  regexStatus(`Stopped. ${regexSummary(run)}. Partial results retained; an already-started request may finish.`);
+}
+
+function addRegexResult(model, snippet) {
+  const table = document.getElementById('regex-results');
+  const row = document.createElement('tr');
+  const path = model.id.split('/').map(encodeURIComponent).join('/');
+  row.innerHTML = `<td><a href="https://huggingface.co/${path}" target="_blank" rel="noopener noreferrer">${escapeHtml(model.id)}</a></td><td>${fmt(model.downloads || 0)}</td><td>${fmt(model.likes || 0)}</td><td class="regex-snippet">${escapeHtml(snippet)}</td>`;
+  table.querySelector('tbody').appendChild(row);
+  table.hidden = false;
+}
+
+async function runRegexSearch(event) {
+  event.preventDefault();
+  if (_regexRun) return;
+  const gen = _fetchGeneration;
+  const value = id => document.getElementById(id).value;
+  const name = value('regex-name');
+  const card = value('regex-card');
+  const flags = value('regex-flags').trim();
+  const limit = Number(value('regex-limit'));
+  if (!name && !card) { regexStatus('Enter a model name regex, a model card regex, or both.', true); return; }
+  if (name.length > 1000 || card.length > 1000) { regexStatus('Patterns must be at most 1,000 characters.', true); return; }
+  if (!/^[imsu]*$/.test(flags) || new Set(flags).size !== flags.length) { regexStatus('Use each supported flag at most once: i, m, s, u.', true); return; }
+  if (!Number.isInteger(limit) || limit < 1 || limit > 500) { regexStatus('Choose a candidate limit from 1 to 500.', true); return; }
+  const query = value('regex-candidates').trim();
+  const sort = value('regex-sort');
+  const run = { matcher: null, checked: 0, total: 0, matches: 0, unavailable: 0, oversized: 0 };
+  _regexRun = run;
+  const current = () => _regexRun === run && !isStale(gen);
+  setRegexBusy(true);
+  regexStatus('Validating patterns…');
+  try {
+    run.matcher = createRegexMatcher();
+    await run.matcher.request({ type: 'init', name, card, flags }, 3000);
+    if (!current()) return;
+    document.querySelector('#regex-results tbody').replaceChildren();
+    document.getElementById('regex-results').hidden = true;
+    regexStatus(`Fetching up to ${limit} candidates${query ? ` for “${query}”` : ''}…`);
+    const params = new URLSearchParams({ sort, direction: '-1', limit: String(limit), full: 'true' });
+    if (query) params.set('search', query);
+    const raw = await fetchJson(`https://huggingface.co/api/models?${params}`);
+    if (!current()) return;
+    if (!Array.isArray(raw)) throw new Error('Unexpected candidate response from Hugging Face.');
+    const models = [...new Map(raw.filter(model => typeof model.id === 'string').map(model => [model.id, model])).values()].slice(0, limit);
+    run.total = models.length;
+    for (const model of models) {
+      if (!current()) return;
+      const nameMatch = await run.matcher.request({ field: 'name', text: model.id });
+      if (!current()) return;
+      let matched = nameMatch.matched;
+      let snippet = nameMatch.snippet;
+      if (matched && card) {
+        const path = model.id.split('/').map(encodeURIComponent).join('/');
+        const url = `https://huggingface.co/${path}/resolve/${encodeURIComponent(model.sha || 'main')}/README.md`;
+        let text = _regexCardCache.get(url);
+        if (text === undefined) {
+          regexStatus(`Reading card for ${model.id}… ${regexSummary(run)}`);
+          try { text = await fetchText(url); }
+          catch (error) {
+            if (!current()) return;
+            run.unavailable++;
+            matched = false;
+          }
+          if (!current()) return;
+          if (typeof text === 'string' && new TextEncoder().encode(text).length <= 1000000) {
+            if (_regexCardCache.size >= 200) _regexCardCache.delete(_regexCardCache.keys().next().value);
+            _regexCardCache.set(url, text);
+          }
+        }
+        if (matched && new TextEncoder().encode(text).length > 1000000) {
+          run.oversized++;
+          matched = false;
+        }
+        if (matched) {
+          const cardMatch = await run.matcher.request({ field: 'card', text });
+          if (!current()) return;
+          matched = cardMatch.matched;
+          snippet = cardMatch.snippet;
+        }
+      }
+      if (!current()) return;
+      run.checked++;
+      if (matched) { run.matches++; addRegexResult(model, snippet); }
+      regexStatus(`Scanning… ${regexSummary(run)}`);
+    }
+    if (!current()) return;
+    regexStatus(`Complete. ${regexSummary(run)}. Results cover only these candidates, not the entire Hub.`);
+  } catch (error) {
+    if (_regexRun === run) regexStatus(`${error.message} ${regexSummary(run)}. Any displayed results are partial.`, true);
+  } finally {
+    run.matcher?.close();
+    if (_regexRun === run) {
+      _regexRun = null;
+      setRegexBusy(false);
+      if (isStale(gen)) regexStatus(`Stopped because explorer data changed. ${regexSummary(run)}. Partial results retained.`);
+    }
+  }
 }
 
 // ── Endpoint Wrappers ──
@@ -3728,6 +3947,8 @@ document.getElementById("hide-missing-param-chip").addEventListener("click", () 
 
 // ── Initialization (_initApp) ──
 function _initApp() {
+  document.getElementById('regex-search-form').addEventListener('submit', runRegexSearch);
+  document.getElementById('regex-stop').addEventListener('click', stopRegexSearch);
   document.getElementById("ds-from").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ds-to").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ps-from").max = CONFIG.PARAM_SLIDER_MAX;

@@ -182,6 +182,16 @@ Filter bar containers carry a `chip-group` class; selector rules use `.chip-grou
 
 ## Filter Architecture
 
+### Independent bounded regex discovery
+
+The regex panel uses a separate results table and a bounded, Hub-sorted candidate query (1–500 models). It does not alter the tree or inherit its filters. Name and raw README patterns are ANDed, and name matching runs before card retrieval. A name query is optional and is never inferred from a regex, since that could silently exclude matches. The UI explicitly describes this sampled scope.
+
+`fetchResource` shares the existing queue for JSON and text responses, with typed deduplication keys. The API request and byte counters include README fetches. Cards are cached by resolve URL, using the candidate SHA when available; the cache is FIFO-bounded at 200 entries and cleared with Clear Cache. Raw cards above 1 MB are skipped and counted. Cards are plain text and match previews are escaped before insertion.
+
+A dedicated Web Worker compiles both patterns and processes one string at a time, with 300 ms per match and 3 seconds for initialization. Timeout terminates the worker. Only non-stateful `imsu` flags are accepted. Runs capture `_fetchGeneration` plus their own identity, checking both after every await; stop terminates the worker and prevents additional requests and stale result/cache writes. An already-started network request can finish. Explorer generation changes invalidate the scan; Clear Cache explicitly stops it. Ordinary text-filter and slider changes remain independent.
+
+No main-thread regex fallback is used when workers are unavailable, because that would reintroduce unbounded UI stalls. Queue promise cleanup uses paired fulfillment/rejection handlers so handled HTTP failures do not leave an unhandled promise from `finally`.
+
 Two-tier update pipeline:
 
 - **Instant (In-memory) path**: Text inputs and sliders apply instantly via debounced callbacks (`debouncedTextFilter`, `debouncedSliderUpdate`). These re-render from in-memory state only — no API calls, no generation bump. Changes are visible immediately but reflect only already-fetched data.

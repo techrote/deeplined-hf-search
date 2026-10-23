@@ -1,5 +1,20 @@
 # A Streamlined Hugging Face Model Search
 
+## Deeplined regex search
+
+Open `streamlined-hf-model-search.html` in a modern browser. The **Regex search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata).
+
+1. Optionally enter a **Candidate name query**, such as `Qwen`. This is ordinary Hub name search, not regex or card search.
+2. Enter a name pattern, a card pattern, or both. When both are provided, a model must match both. For example, name `Qwen.*(7B|8B).*GGUF$` and card `tool[ -]?calling|function calling`.
+3. Choose flags (`i`, `m`, `s`, `u`), candidate sort, and a limit between 1 and 500. Patterns have no `/delimiters/`; use `i` for case-insensitive matching.
+4. Click **Search with regex**. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
+
+This scans a bounded candidate sample, **not all cards on the Hub**. Leave the candidate query empty to scan top models in the selected sort order. Narrow the query to increase coverage of a family; broaden it if you are looking for a term present only in cards. The explorer's date, parameter, and quantization filters below are independent of the regex panel.
+
+Card scans use one additional request per name-matching candidate, through the existing shared rate limiter. Successful cards are cached by revision (up to 200); **Clear Cache** clears them. Missing, gated, or otherwise unreadable cards and cards over 1 MB are counted as skipped, not searched. Readme content is never rendered as HTML. Patterns run in a disposable Web Worker with a 300 ms matching timeout so expensive expressions cannot freeze the UI. Invalid patterns and unsupported flags produce errors before candidate requests.
+
+Run regression checks with `node tests/regex-search-test.cjs`.
+
 A dark-color themed, browser-based, 4-level hierarchical explorer for HuggingFace base models and their quantizations.
 
 **Key Features:**

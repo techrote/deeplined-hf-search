@@ -1,5 +1,13 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.01 — Regex search for model names and cards
+
+- Added independent regex discovery with optional candidate name query, Hub sort, and a 1–500 model limit; clearly labels sampled coverage and independence from explorer filters.
+- Supports ANDed name/README patterns, `imsu` flags, progress, cancellation, escaped match previews, and counts for unavailable or oversized cards.
+- Runs regex compilation/matching in a disposable worker with a timeout; invalid patterns do not trigger candidate requests.
+- Extended the shared rate-limited queue to read raw cards, added a revision-keyed bounded card cache, and guarded asynchronous results against stopped or stale runs.
+- Added regression tests covering worker timeouts, matching semantics, card failures, caching, cancellation, generation changes, and typed queue cleanup.
+
 ### v260603.01 — Two-phase orphan promotion: fall back to L2 when parent not in tree
 
 - **Fix:** Added Phase 2 to `upsertModelIntoTree` that promotes quant models to their
