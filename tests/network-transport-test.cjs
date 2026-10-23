@@ -5,7 +5,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "streamlined-hf-model-search.html"), "utf8");
-const script = html.match(/<script>([\s\S]*?)<\/script>/i);
+const script = html.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i);
 if (!script) throw new Error("Cannot locate application script");
 
 test("complete inline application script parses", () => {
