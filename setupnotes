@@ -1,0 +1,27 @@
+
+
+(async () => {
+  const tests = [
+    ["Model search",
+      "https://huggingface.co/api/models?search=Qwen2.5-7B-Instruct&limit=1"],
+    ["Individual model",
+      "https://huggingface.co/api/models/Qwen/Qwen2.5-7B-Instruct"],
+    ["Model card",
+      "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/raw/main/README.md"]
+  ];
+
+  for (const [name, url] of tests) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      const body = await response.text();
+
+      console.log(name, {
+        status: response.status,
+        contentType: response.headers.get("content-type"),
+        preview: body.slice(0, 100)
+      });
+    } catch (error) {
+      console.log(name, "FAILED:", error.message);
+    }
+  }
+})();
