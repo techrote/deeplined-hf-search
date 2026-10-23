@@ -211,3 +211,23 @@ L2 text filter is applied globally in `passesTreeNodeFilters()` before L1 aggreg
 - **L2/L3/L4 render deduplication**: Level-specific differences (badges, popups, expansion/collapse cascade, data flow) require ~10+ callback parameters in a generic helper — reduces readability more than duplication costs.
 - **JSDoc annotations**: Adds bulk to a single-file app with existing design notes and self-documenting naming conventions. No runtime benefit.
 - **IntersectionObserver lazy loading**: High complexity for marginal UX gain. Click-to-expand model works well; pre-fetching wastes API calls on models users never expand.
+
+---
+
+## Optional network transport
+
+The app retains its single-file direct-Hub behaviour by default. Its
+optional API Connection panel selects a gateway origin, stored locally when
+browser storage is available. The existing fetchJson queue resolves the
+selected transport before deduplicating requests. Switching sources resets
+cached results and aborts in-flight work.
+
+The gateway (gateway/src/worker.mjs) is a separate read-only Worker with a
+fixed Hugging Face upstream and a narrow metadata route allowlist. It
+validates paths and query parameters, bounds response sizes, and does not
+follow upstream redirects. Its CORS allowlist is not authentication.
+
+Browser connection tests use the Hub listing endpoint or the gateway
+/health endpoint, without altering system network configuration.
+
+Design and usage: docs/metadata-transport.md and gateway/README.md.

@@ -14,6 +14,16 @@ A dark-color themed, browser-based, 4-level hierarchical explorer for HuggingFac
 ![Hugging Face Search](./search.png "Example Search")
 
 
+## Configurable model-metadata backend
+
+Deeplined can query the Hugging Face API directly (the default), or use an
+optional, self-hosted read-only metadata gateway. Open **API Connection**,
+enter your HTTPS gateway origin, click **Apply**, then **Test connection**.
+The original standalone HTML workflow remains unchanged in direct mode.
+
+See [metadata transport](docs/metadata-transport.md) for the interface and
+[gateway setup](gateway/README.md) for an example Cloudflare Worker.
+
 ## Feature specifics
 
 ### Tiered Output Structure

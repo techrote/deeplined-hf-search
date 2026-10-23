@@ -1,5 +1,14 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.01 — Configurable metadata transport
+
+- Added a Direct/Gateway selector, gateway URL validation, connectivity check,
+  and persistent browser preference without changing the standalone default.
+- Added a separately deployable, read-only model metadata gateway with
+  bounded bodies, route and query validation, CORS configuration and caching.
+- Added Node regression coverage and optional gateway documentation.
+
+
 ### v260603.01 — Two-phase orphan promotion: fall back to L2 when parent not in tree
 
 - **Fix:** Added Phase 2 to `upsertModelIntoTree` that promotes quant models to their

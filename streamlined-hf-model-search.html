@@ -245,6 +245,20 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; }
   }
+
+  #api-connection { margin: 10px 0; border: 1px solid #30363d; border-radius: 7px; background: #161b22; padding: 8px 12px; }
+  #api-connection summary { cursor: pointer; color: #9ecbff; font-size: 0.82rem; font-weight: 600; }
+  #api-connection summary:focus-visible { outline: 2px solid #58a6ff; }
+  .api-connection-controls { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; margin: 10px 0 3px; font-size: 0.8rem; }
+  .api-connection-controls select, .api-connection-controls input {
+    background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 5px; padding: 6px 8px; font: inherit;
+  }
+  .api-connection-controls input { min-width: 245px; flex: 1; }
+  .api-connection-controls input:disabled { opacity: 0.5; }
+  .api-connection-controls button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 5px; padding: 6px 10px; cursor: pointer; }
+  .api-connection-controls button:focus-visible, .api-connection-controls select:focus-visible,
+  .api-connection-controls input:focus-visible { outline: 2px solid #58a6ff; }
+  #api-connection-status { font-size: 0.74rem; color: #9da7b4; min-height: 1em; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -252,6 +266,21 @@
 <h1><span aria-hidden="true">🔍</span> A Streamlined Hugging Face Model Search</h1>
 <main>
 <div id="status-bar"><div id="status" aria-live="polite">Fetching models…</div><span id="version"></span></div>
+<details id="api-connection">
+  <summary>API Connection — Direct by default; optional metadata gateway</summary>
+  <div class="api-connection-controls">
+    <label for="api-transport-mode">Source</label>
+    <select id="api-transport-mode" aria-label="API transport">
+      <option value="direct">Direct Hugging Face</option>
+      <option value="gateway">HTTPS metadata gateway</option>
+    </select>
+    <label for="api-gateway-url">Gateway origin</label>
+    <input type="url" id="api-gateway-url" placeholder="https://your-gateway.example" autocomplete="url" spellcheck="false" aria-label="Gateway HTTPS origin">
+    <button type="button" id="api-transport-apply">Apply</button>
+    <button type="button" id="api-transport-test">Test connection</button>
+  </div>
+  <div id="api-connection-status" role="status" aria-live="polite">Direct Hugging Face API selected.</div>
+</details>
 <div id="date-slider">
   <h2 class="ds-title">Date Range</h2>
   <div class="ds-track-wrap" role="group" aria-label="Date range filter">
@@ -356,7 +385,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '260606.01';
+const APP_VERSION = '261023.01';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -473,6 +502,115 @@ const CONFIG = {
   POPUP_HIDE_DELAY: 200,   // ms debounce before popup disappears (same as DEBOUNCE_MS)
   POPUP_MAX_SAMPLES_L4: 200,  // L4 hidden models preview cap; L2 shows all with no cap
 };
+
+// ── API Transport ──
+// Optional origin-only metadata gateway. The default preserves direct single-file use.
+const TRANSPORT_STORAGE_KEY = "deeplined-hf-transport-v1";
+let _transportMode = "direct";
+let _gatewayOrigin = "";
+
+function normalizeGatewayOrigin(value) {
+  if (typeof value !== "string" || !value.trim()) throw new Error("Enter a gateway HTTPS origin.");
+  let u;
+  try { u = new URL(value.trim()); }
+  catch { throw new Error("Enter a valid gateway URL."); }
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(u.hostname);
+  if (u.protocol !== "https:" && !(u.protocol === "http:" && loopback)) {
+    throw new Error("Gateway must use HTTPS (HTTP is only allowed on loopback).");
+  }
+  if (u.username || u.password || u.search || u.hash || (u.pathname !== "/" && u.pathname !== "")) {
+    throw new Error("Use a gateway origin only, without credentials, path, query or fragment.");
+  }
+  return u.origin;
+}
+
+function resolveHubApiUrl(hubUrl) {
+  if (_transportMode !== "gateway") return hubUrl;
+  if (!_gatewayOrigin) throw new Error("A gateway endpoint is required.");
+  const url = new URL(hubUrl);
+  if (url.origin !== "https://huggingface.co") return hubUrl;
+  if (url.username || url.password) throw new Error("Embedded URL credentials are not supported.");
+  return _gatewayOrigin + url.pathname + url.search;
+}
+
+function readTransportPreference() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TRANSPORT_STORAGE_KEY) || "null");
+    if (saved && saved.mode === "gateway" && saved.origin) {
+      return { mode: "gateway", origin: normalizeGatewayOrigin(saved.origin) };
+    }
+  } catch { /* Browser storage may be unavailable for local files. */ }
+  return { mode: "direct", origin: "" };
+}
+
+function setupApiConnectionControls() {
+  const selector = document.getElementById("api-transport-mode");
+  const address = document.getElementById("api-gateway-url");
+  const output = document.getElementById("api-connection-status");
+  const testButton = document.getElementById("api-transport-test");
+  const saved = readTransportPreference();
+  _transportMode = saved.mode;
+  _gatewayOrigin = saved.origin;
+  selector.value = saved.mode;
+  address.value = saved.origin;
+  function updateFields() { address.disabled = selector.value !== "gateway"; }
+  selector.addEventListener("change", updateFields);
+  updateFields();
+  output.textContent = saved.mode === "gateway" ? "Saved gateway selected." : "Direct Hugging Face API selected.";
+
+  document.getElementById("api-transport-apply").addEventListener("click", () => {
+    try {
+      const mode = selector.value;
+      const origin = mode === "gateway" ? normalizeGatewayOrigin(address.value) : "";
+      const changed = mode !== _transportMode || origin !== _gatewayOrigin;
+      _transportMode = mode;
+      _gatewayOrigin = origin;
+      try { localStorage.setItem(TRANSPORT_STORAGE_KEY, JSON.stringify({ mode, origin })); }
+      catch { /* Nonpersistent operation remains available. */ }
+      if (changed) {
+        resetAppState();
+        recomputeAndRender();
+        markDirty();
+        UI.setStatus("API source updated. Fetch results to query the selected source.");
+      }
+      output.textContent = (mode === "gateway" ? "Gateway selected: " + origin : "Direct API selected.") +
+        " No browser network settings are changed.";
+    } catch (error) {
+      output.textContent = error.message;
+    }
+  });
+
+  testButton.addEventListener("click", async () => {
+    const controller = new AbortController();
+    let timeout;
+    try {
+      const mode = selector.value;
+      const endpoint = mode === "gateway" ?
+        normalizeGatewayOrigin(address.value) + "/health" :
+        "https://huggingface.co/api/models?limit=1";
+      testButton.disabled = true;
+      output.textContent = "Checking API connectivity...";
+      timeout = setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(endpoint, {
+        signal: controller.signal, cache: "no-store", headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const result = await response.json();
+      if (mode === "gateway" && (!result || result.status !== "ok")) {
+        throw new Error("Gateway health response was not recognised.");
+      }
+      if (mode === "direct" && !Array.isArray(result)) {
+        throw new Error("Unexpected Hub API response.");
+      }
+      output.textContent = "Connection successful. Click Apply to select this source.";
+    } catch (error) {
+      output.textContent = "Connection failed: " + error.message;
+    } finally {
+      clearTimeout(timeout);
+      testButton.disabled = false;
+    }
+  });
+}
 
 // ── Expansion Key Prefixes ──
 // Expansion key prefixes — used for stable identification across re-renders.
@@ -1043,6 +1181,8 @@ let _uiRafId = null;
 // ── Queue-based API Request Manager ──
 //   fetchJson → _scheduleDequeue → _dequeueNext → _dispatchFetchWithRetry
 function fetchJson(url) {
+  try { url = resolveHubApiUrl(url); }
+  catch (error) { return Promise.reject(error); }
   const existing = _inflightFetches.get(url);
   if (existing) return existing;
 
@@ -3728,6 +3868,7 @@ document.getElementById("hide-missing-param-chip").addEventListener("click", () 
 
 // ── Initialization (_initApp) ──
 function _initApp() {
+  setupApiConnectionControls();
   document.getElementById("ds-from").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ds-to").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ps-from").max = CONFIG.PARAM_SLIDER_MAX;
