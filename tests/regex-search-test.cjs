@@ -10,10 +10,11 @@ new vm.Script(source);
 const elements = new Map();
 function element(id) {
   if (!elements.has(id)) elements.set(id, {
-    value: '', textContent: '', innerHTML: '', hidden: false, disabled: false,
+    id, value: '', textContent: '', innerHTML: '', hidden: false, disabled: false, checked: false,
     dataset: {}, style: {}, children: [],
     classList: { add() {}, remove() {} },
     addEventListener() {},
+    setAttribute(name, value) { this[name] = value; },
     appendChild(child) { this.children.push(child); },
     replaceChildren() { this.children = []; },
     querySelector() { return element('tbody'); }
@@ -56,18 +57,19 @@ const context = vm.createContext({
   Worker: TestWorker,
   fetch: async url => { calls.push(url); return handler(url); }
 });
-const expose = `globalThis.testApi = { runRegexSearch, stopRegexSearch, fetchJson, fetchText, resetAppState,
+const expose = `globalThis.testApi = { runRegexSearch, stopRegexSearch, fetchJson, fetchText, resetAppState, updateSearchMode, createRegexMatcher,
   cache: _regexCardCache, CONFIG, bump: () => { _fetchGeneration++; } };`;
 vm.runInContext(source.replace(/\}\)\(\);\s*$/, expose + '\n})();'), context);
 const api = context.testApi;
 api.CONFIG.RATE_WINDOW = 1;
 api.CONFIG.MAX_RETRIES = 0;
-const formIds = ['regex-candidates', 'regex-name', 'regex-card', 'regex-flags', 'regex-sort', 'regex-limit', 'regex-run', 'regex-stop'];
+const formIds = ['regex-mode', 'regex-candidates', 'regex-name', 'regex-card', 'regex-flags', 'regex-sort', 'regex-limit', 'regex-run', 'regex-stop'];
 element('regex-search-form').elements = formIds.map(element);
 function setup(values = {}) {
   calls.length = 0;
   api.cache.clear();
   for (const id of formIds) element(id).value = '';
+  element('regex-mode').checked = true;
   element('regex-flags').value = 'i';
   element('regex-sort').value = 'downloads';
   element('regex-limit').value = '50';
@@ -90,7 +92,7 @@ async function until(predicate) {
 (async () => {
   setup({ name: '[' });
   await run();
-  assert.match(status(), /Invalid regex/);
+  assert.match(status(), /Invalid search/);
   assert.equal(calls.length, 0);
   for (const flags of ['ii', 'g', 'y', 'z']) {
     setup({ name: 'Qwen', flags });
@@ -100,7 +102,7 @@ async function until(predicate) {
   }
   setup();
   await run();
-  assert.match(status(), /Enter a model name regex/);
+  assert.match(status(), /Enter a model name search/);
   assert.equal(calls.length, 0);
   console.log('PASS: invalid patterns, missing patterns, and flags issue no requests');
 
@@ -175,7 +177,7 @@ async function until(predicate) {
   setup({ name: '(a+)+$' });
   handler = () => response([{ id: 'Org/' + 'a'.repeat(60000) + '!' }]);
   await run();
-  assert.match(status(), /Regex took too long/);
+  assert.match(status(), /Matching took too long/);
   assert.equal(element('regex-run').disabled, false);
   console.log('PASS: pathological regex is terminated in a real worker');
 
@@ -186,5 +188,77 @@ async function until(predicate) {
   await new Promise(resolve => setTimeout(resolve, 20));
   assert.deepEqual(unhandled, []);
   console.log('PASS: HTTP failures do not leak unhandled queue rejections');
+
+  assert(!html.match(/<input[^>]*id="regex-mode"[^>]*>/)[0].includes('checked'));
+  element('regex-mode').checked = false;
+  api.updateSearchMode();
+  assert.equal(element('regex-flags-label').hidden, true);
+  assert.equal(element('regex-flags').disabled, true);
+  assert.equal(element('standard-search-help').hidden, false);
+  assert.equal(element('regex-run').textContent, 'Search');
+  element('regex-mode').checked = true;
+  api.updateSearchMode();
+  assert.equal(element('regex-flags-label').hidden, false);
+  assert.equal(element('regex-flags').disabled, false);
+  assert.equal(element('standard-search-help').hidden, true);
+  assert.equal(element('regex-run').textContent, 'Search with regex');
+  console.log('PASS: advanced mode is default and regex toggle changes labels, help and flag controls');
+
+  const matcher = api.createRegexMatcher();
+  try {
+    const examples = [
+      ['+qwen -gptq', 'QWEN/Test-GGUF', true],
+      ['+qwen -gptq', 'Qwen/Test-GPTQ', false],
+      ['qwen gguf', 'Qwen/Test', false],
+      ['"tool calling"', 'Supports tool calling today', true],
+      ['"tool calling"', 'tool advanced calling', false],
+      ['-"tool calling"', 'No function support', true],
+      ['-"tool calling"', 'supports TOOL CALLING', false],
+      ['Qwen*GGUF', 'Qwen-Long\nModel-GGUF', true],
+      ['a?b', 'a😀b', true],
+      ['a?b', 'axyb', false],
+      ['a*{2,4}b', 'a12b', true],
+      ['a*{2,4}b', 'a12345b', false],
+      ['a*{3}b', 'a123b', true],
+      ['a*{3}b', 'a12b', false],
+      ['a*{2,}b', 'a123456789b', true],
+      ['a*{0,0}b', 'ab', true],
+      ['\\* \\? \\+ \\- \\" \\\\', '* ? + - " \\', true],
+      ['Qwen[7B].(it)|x', 'Qwen[7B].(it)|x', true],
+      ['Qwen[7B]', 'Qwen7', false],
+      ['+"tool * calling"', 'tool advanced function calling', true],
+      ['-gptq', 'GGUF model', true]
+    ];
+    for (const [query, text, expected] of examples) {
+      await matcher.request({ type: 'init', mode: 'advanced', name: query, card: '', flags: '' }, 3000);
+      const result = await matcher.request({ field: 'name', text });
+      assert.equal(result.matched, expected, `Query ${query} against ${text}`);
+    }
+    for (const query of ['"unfinished', '+', '-', '""', 'foo\\', 'a*{4,2}b', 'a*{10001}b', 'a*{1,no}b']) {
+      await assert.rejects(matcher.request({ type: 'init', mode: 'advanced', name: query, card: '', flags: '' }, 3000), /Invalid search/);
+    }
+  } finally { matcher.close(); }
+  console.log('PASS: required/excluded terms, phrases, wildcard ranges, Unicode, literals and malformed syntax');
+
+  setup({ name: '+Qwen +7B -GPTQ *GGUF', card: '+"tool calling" -experimental', flags: 'invalid' });
+  element('regex-mode').checked = false;
+  handler = url => url.includes('/api/models?') ? response([
+    { id: 'Qwen/Good-7B-GGUF' }, { id: 'Qwen/Bad-7B-GPTQ-GGUF' },
+    { id: 'Qwen/Experimental-7B-GGUF' }, { id: 'Qwen/Good-8B-GGUF' }
+  ]) : response(url.includes('/Experimental-') ? 'experimental tool calling' : 'supports tool calling');
+  await run();
+  assert.match(status(), /Complete\. 1 matches · 4\/4/);
+  assert.equal(rows().length, 1);
+  assert.equal(calls.length, 3);
+  assert.equal(element('regex-flags').disabled, true);
+  console.log('PASS: standard search name/card integration and hidden regex flags do not affect standard mode');
+
+  setup({ name: '"unfinished' });
+  element('regex-mode').checked = false;
+  await run();
+  assert.match(status(), /Close the quoted phrase/);
+  assert.equal(calls.length, 0);
+  assert.equal(element('regex-run').disabled, false);
+  console.log('PASS: invalid advanced syntax is rejected before network requests');
   console.log('All regex-search tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

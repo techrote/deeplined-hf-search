@@ -250,6 +250,8 @@
   #regex-search p { color: #8b949e; font-size: .85rem; margin: 8px 0; line-height: 1.5; }
   .regex-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 12px 0; }
   .regex-fields label { display: flex; flex-direction: column; gap: 5px; font-size: .85rem; }
+  .regex-fields label[hidden] { display: none; }
+  .search-mode-toggle { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .85rem; }
   .regex-fields input, .regex-fields select { width: 100%; background: #0d1117; color: #e6edf3; border: 1px solid #484f58; border-radius: 4px; padding: 8px; }
   #regex-search button { padding: 7px 12px; margin-right: 8px; cursor: pointer; }
   #regex-search button:disabled { cursor: default; opacity: .5; }
@@ -267,22 +269,24 @@
 <h1><span aria-hidden="true">🔍</span> Deeplined HF Search</h1>
 <main>
 <section id="regex-search" aria-labelledby="regex-search-title">
-  <h2 id="regex-search-title">Regex search · model names and cards</h2>
-  <p id="regex-scope">Search a sample of up to 500 models from the Hub. The optional candidate query searches model names before regex matching. This is not a full-Hub card index; the explorer filters below do not apply to this search.</p>
-  <form id="regex-search-form" aria-describedby="regex-scope regex-help">
+  <h2 id="regex-search-title">Advanced search · model names and cards</h2>
+  <p id="regex-scope">Search a sample of up to 500 models from the Hub. The optional candidate query narrows model names before advanced matching. This is not a full-Hub card index; the explorer filters below do not apply to this search.</p>
+  <form id="regex-search-form" aria-describedby="regex-scope standard-search-help">
+    <label class="search-mode-toggle"><input type="checkbox" id="regex-mode" aria-controls="regex-flags-label regex-help standard-search-help">Use regular expressions</label>
     <div class="regex-fields">
       <label>Candidate name query (optional)<input id="regex-candidates" placeholder="e.g. Qwen" maxlength="200"></label>
-      <label>Model name regex (optional)<input id="regex-name" placeholder="e.g. Qwen.*(7B|8B).*GGUF$" maxlength="1000" spellcheck="false"></label>
-      <label>Model card regex (optional)<input id="regex-card" placeholder="e.g. tool[ -]?calling|function calling" maxlength="1000" spellcheck="false"></label>
-      <label>Regex flags<input id="regex-flags" value="i" maxlength="4" spellcheck="false" aria-describedby="regex-help"></label>
+      <label><span id="search-name-label">Model name search (optional)</span><input id="regex-name" placeholder="e.g. +Qwen +7B -GPTQ *GGUF" maxlength="1000" spellcheck="false"></label>
+      <label><span id="search-card-label">Model card search (optional)</span><input id="regex-card" placeholder='e.g. +"tool calling" -experimental' maxlength="1000" spellcheck="false"></label>
+      <label id="regex-flags-label" hidden>Regex flags<input id="regex-flags" value="i" maxlength="4" spellcheck="false" disabled aria-describedby="regex-help"></label>
       <label>Candidate sort<select id="regex-sort"><option value="downloads">Most downloaded</option><option value="likes">Most liked</option><option value="lastModified">Recently updated</option><option value="trendingScore">Trending</option></select></label>
       <label>Candidate limit<input id="regex-limit" type="number" min="1" max="500" value="50" required></label>
     </div>
-    <p id="regex-help">Enter patterns without /delimiters/. Flags: i = ignore case, m = multiline anchors, s = dot matches newlines, u = Unicode. Supply at least one pattern; when both are supplied, both must match. Names include author/model. Cards are raw README.md text, including YAML metadata; each name-matching candidate may need one extra request.</p>
-    <button type="submit" id="regex-run">Search with regex</button><button type="button" id="regex-stop" disabled>Stop search</button>
+    <p id="standard-search-help">All terms are required (AND), with or without +. Use -term to exclude, "exact phrase" for adjacent text, ? for exactly one character, and * for any number of characters (including spaces/newlines). Use *{2,5} for 2–5 characters, *{3} for exactly 3, or *{2,} for 2 or more (bounds up to 10,000). Escape operators with a backslash, e.g. \* for a literal star. Matching is case-insensitive and terms may occur anywhere in the text. If both name and card searches are supplied, both must match. Cards include raw README.md and YAML metadata.</p>
+    <p id="regex-help" hidden>Enter patterns without /delimiters/. Flags: i = ignore case, m = multiline anchors, s = dot matches newlines, u = Unicode. Supply at least one pattern; when both are supplied, both must match. Names include author/model. Cards are raw README.md text, including YAML metadata; each name-matching candidate may need one extra request.</p>
+    <button type="submit" id="regex-run">Search</button><button type="button" id="regex-stop" disabled>Stop search</button>
   </form>
-  <div id="regex-search-status" role="status" aria-live="polite">Ready. Try a name pattern, a card pattern, or both.</div>
-  <div id="regex-results-wrap"><table id="regex-results" hidden><caption>Regex matches, in candidate sort order</caption><thead><tr><th scope="col">Model</th><th scope="col">Downloads</th><th scope="col">Likes</th><th scope="col">Matching text</th></tr></thead><tbody></tbody></table></div>
+  <div id="regex-search-status" role="status" aria-live="polite">Ready. Search names, cards, or both. Regex is optional.</div>
+  <div id="regex-results-wrap"><table id="regex-results" hidden><caption>Search matches, in candidate sort order</caption><thead><tr><th scope="col">Model</th><th scope="col">Downloads</th><th scope="col">Likes</th><th scope="col">Matching text</th></tr></thead><tbody></tbody></table></div>
 </section>
 <div id="status-bar"><div id="status" aria-live="polite">Fetching models…</div><span id="version"></span></div>
 <div id="date-slider">
@@ -389,7 +393,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '261023.01';
+const APP_VERSION = '261023.02';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -1221,23 +1225,69 @@ function _dispatchFetchWithRetry(item, gen, retries) {
 const _regexCardCache = new Map();
 let _regexRun = null;
 
+function parseAdvancedQuery(query) {
+  const terms = [];
+  let i = 0;
+  const literal = char => char.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+  while (i < query.length) {
+    if (/\s/.test(query[i])) { i++; continue; }
+    let exclude = false;
+    if (query[i] === '+' || query[i] === '-') { exclude = query[i] === '-'; i++; }
+    let source = '', quoted = false, hasContent = false;
+    while (i < query.length && (quoted || !/\s/.test(query[i]))) {
+      const char = query[i++];
+      if (char === '\\') {
+        if (i >= query.length) throw new Error('A trailing backslash must escape a character.');
+        source += literal(query[i++]);
+        hasContent = true;
+      } else if (char === '"') {
+        quoted = !quoted;
+      } else if (char === '*' || char === '?') {
+        hasContent = true;
+        if (char === '*' && query[i] === '{') {
+          const range = query.slice(i).match(/^\{(\d+)(?:,(\d*))?\}/);
+          if (!range) throw new Error('Use *{n}, *{min,max}, or *{min,} for a wildcard range.');
+          const min = Number(range[1]);
+          const max = range[2] === undefined ? min : range[2] === '' ? Infinity : Number(range[2]);
+          if (min > 10000 || (max !== Infinity && max > 10000) || max < min) throw new Error('Wildcard bounds must be ordered numbers from 0 to 10,000.');
+          source += `[\\s\\S]${range[0]}?`;
+          i += range[0].length;
+        } else {
+          source += char === '*' ? '[\\s\\S]*?' : '[\\s\\S]';
+        }
+      } else {
+        source += literal(char);
+        hasContent = true;
+      }
+    }
+    if (quoted) throw new Error('Close the quoted phrase with a double quote.');
+    if (!hasContent) throw new Error('Add a term after + or -, and do not use empty quotes.');
+    terms.push({ source, exclude });
+  }
+  return terms;
+}
+
 function regexWorkerMain() {
   let patterns;
   self.onmessage = ({ data }) => {
     try {
       if (data.type === 'init') {
-        patterns = {
-          name: data.name ? new RegExp(data.name, data.flags) : null,
-          card: data.card ? new RegExp(data.card, data.flags) : null
-        };
+        const compile = query => data.mode === 'regex'
+          ? (query ? [{ pattern: new RegExp(query, data.flags), exclude: false }] : [])
+          : parseAdvancedQuery(query).map(term => ({ pattern: new RegExp(term.source, 'iu'), exclude: term.exclude }));
+        patterns = { name: compile(data.name), card: compile(data.card) };
         self.postMessage({ ok: true });
         return;
       }
-      const pattern = patterns[data.field];
-      const match = pattern ? pattern.exec(data.text) : null;
+      let match = null;
+      for (const { pattern, exclude } of patterns[data.field]) {
+        const found = pattern.exec(data.text);
+        if (exclude ? !!found : !found) { self.postMessage({ matched: false, snippet: '' }); return; }
+        if (!exclude && !match) match = found;
+      }
       const start = match ? Math.max(0, match.index - 70) : 0;
       const end = match ? Math.min(data.text.length, match.index + Math.min(match[0].length, 200) + 100) : 0;
-      self.postMessage({ matched: !pattern || !!match, snippet: match ? (start ? '…' : '') + data.text.slice(start, end) + (end < data.text.length ? '…' : '') : '' });
+      self.postMessage({ matched: true, snippet: match ? (start ? '…' : '') + data.text.slice(start, end) + (end < data.text.length ? '…' : '') : 'Passed exclusion filters.' });
     } catch (error) {
       self.postMessage({ error: error.message });
     }
@@ -1245,7 +1295,7 @@ function regexWorkerMain() {
 }
 
 function createRegexMatcher() {
-  const url = URL.createObjectURL(new Blob([`(${regexWorkerMain.toString()})()`], { type: 'text/javascript' }));
+  const url = URL.createObjectURL(new Blob([`const parseAdvancedQuery = ${parseAdvancedQuery.toString()}; (${regexWorkerMain.toString()})()`], { type: 'text/javascript' }));
   let worker;
   try { worker = new Worker(url); } finally { URL.revokeObjectURL(url); }
   let pending = null;
@@ -1257,13 +1307,13 @@ function createRegexMatcher() {
     const timer = setTimeout(() => {
       pending = null;
       worker.terminate();
-      reject(new Error('Regex took too long. Simplify the pattern and try again.'));
+      reject(new Error('Matching took too long. Simplify the query or regex and try again.'));
     }, timeout);
     pending = { reject, timer };
     worker.onmessage = ({ data: result }) => {
       clearTimeout(timer);
       pending = null;
-      if (result.error) reject(new Error(`Invalid regex: ${result.error}`));
+      if (result.error) reject(new Error(`Invalid search: ${result.error}`));
       else resolve(result);
     };
     worker.onerror = event => {
@@ -1287,6 +1337,21 @@ function setRegexBusy(busy) {
   for (const element of document.getElementById('regex-search-form').elements) {
     element.disabled = element.id === 'regex-stop' ? !busy : busy;
   }
+  document.getElementById('regex-flags').disabled = busy || !document.getElementById('regex-mode').checked;
+}
+
+function updateSearchMode() {
+  const regex = document.getElementById('regex-mode').checked;
+  document.getElementById('search-name-label').textContent = regex ? 'Model name regex (optional)' : 'Model name search (optional)';
+  document.getElementById('search-card-label').textContent = regex ? 'Model card regex (optional)' : 'Model card search (optional)';
+  document.getElementById('regex-name').placeholder = regex ? 'e.g. Qwen.*(7B|8B).*GGUF$' : 'e.g. +Qwen +7B -GPTQ *GGUF';
+  document.getElementById('regex-card').placeholder = regex ? 'e.g. tool[ -]?calling|function calling' : 'e.g. +"tool calling" -experimental';
+  document.getElementById('regex-flags-label').hidden = !regex;
+  document.getElementById('regex-flags').disabled = !regex;
+  document.getElementById('regex-help').hidden = !regex;
+  document.getElementById('standard-search-help').hidden = regex;
+  document.getElementById('regex-run').textContent = regex ? 'Search with regex' : 'Search';
+  document.getElementById('regex-search-form').setAttribute('aria-describedby', `regex-scope ${regex ? 'regex-help' : 'standard-search-help'}`);
 }
 
 function regexSummary(run) {
@@ -1316,13 +1381,14 @@ async function runRegexSearch(event) {
   if (_regexRun) return;
   const gen = _fetchGeneration;
   const value = id => document.getElementById(id).value;
-  const name = value('regex-name');
-  const card = value('regex-card');
+  const mode = document.getElementById('regex-mode').checked ? 'regex' : 'advanced';
+  const name = mode === 'regex' ? value('regex-name') : value('regex-name').trim();
+  const card = mode === 'regex' ? value('regex-card') : value('regex-card').trim();
   const flags = value('regex-flags').trim();
   const limit = Number(value('regex-limit'));
-  if (!name && !card) { regexStatus('Enter a model name regex, a model card regex, or both.', true); return; }
-  if (name.length > 1000 || card.length > 1000) { regexStatus('Patterns must be at most 1,000 characters.', true); return; }
-  if (!/^[imsu]*$/.test(flags) || new Set(flags).size !== flags.length) { regexStatus('Use each supported flag at most once: i, m, s, u.', true); return; }
+  if (!name && !card) { regexStatus('Enter a model name search, a model card search, or both.', true); return; }
+  if (name.length > 1000 || card.length > 1000) { regexStatus('Queries must be at most 1,000 characters.', true); return; }
+  if (mode === 'regex' && (!/^[imsu]*$/.test(flags) || new Set(flags).size !== flags.length)) { regexStatus('Use each supported flag at most once: i, m, s, u.', true); return; }
   if (!Number.isInteger(limit) || limit < 1 || limit > 500) { regexStatus('Choose a candidate limit from 1 to 500.', true); return; }
   const query = value('regex-candidates').trim();
   const sort = value('regex-sort');
@@ -1330,10 +1396,10 @@ async function runRegexSearch(event) {
   _regexRun = run;
   const current = () => _regexRun === run && !isStale(gen);
   setRegexBusy(true);
-  regexStatus('Validating patterns…');
+  regexStatus('Validating search…');
   try {
     run.matcher = createRegexMatcher();
-    await run.matcher.request({ type: 'init', name, card, flags }, 3000);
+    await run.matcher.request({ type: 'init', mode, name, card, flags }, 3000);
     if (!current()) return;
     document.querySelector('#regex-results tbody').replaceChildren();
     document.getElementById('regex-results').hidden = true;
@@ -3947,6 +4013,8 @@ document.getElementById("hide-missing-param-chip").addEventListener("click", () 
 
 // ── Initialization (_initApp) ──
 function _initApp() {
+  document.getElementById('regex-mode').addEventListener('change', updateSearchMode);
+  updateSearchMode();
   document.getElementById('regex-search-form').addEventListener('submit', runRegexSearch);
   document.getElementById('regex-stop').addEventListener('click', stopRegexSearch);
   document.getElementById("ds-from").max = CONFIG.DATE_SLIDER_MAX;

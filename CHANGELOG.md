@@ -1,5 +1,12 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.02 — Default advanced syntax with optional regex mode
+
+- Made standard advanced search the default, with required (+ or unprefixed) terms, excluded (-) terms, quoted phrases, backslash escapes, single-character (?) and variable-length (*) wildcards.
+- Added explicit wildcard lengths: *{n}, *{min,max}, and *{min,}; validates ranges and incomplete queries before requests.
+- Added a regex checkbox that changes both inputs and reveals regex flags; flags are hidden, disabled, and ignored in standard mode. Search text is preserved when switching modes.
+- Kept worker timeouts, card caching, sampled coverage, and cancellation for both modes; expanded tests to cover advanced parsing, Unicode wildcards, literal regex punctuation, negative-only queries, malformed syntax, and mode controls.
+
 ### v261023.01 — Regex search for model names and cards
 
 - Added independent regex discovery with optional candidate name query, Hub sort, and a 1–500 model limit; clearly labels sampled coverage and independence from explorer filters.

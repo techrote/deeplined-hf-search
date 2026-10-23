@@ -1,17 +1,33 @@
 # A Streamlined Hugging Face Model Search
 
-## Deeplined regex search
+## Deeplined advanced search
 
-Open `streamlined-hf-model-search.html` in a modern browser. The **Regex search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata).
+Open `streamlined-hf-model-search.html` in a modern browser. The **Advanced search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata). Standard advanced syntax is the default; enable **Use regular expressions** for regex inputs and flags.
 
-1. Optionally enter a **Candidate name query**, such as `Qwen`. This is ordinary Hub name search, not regex or card search.
-2. Enter a name pattern, a card pattern, or both. When both are provided, a model must match both. For example, name `Qwen.*(7B|8B).*GGUF$` and card `tool[ -]?calling|function calling`.
-3. Choose flags (`i`, `m`, `s`, `u`), candidate sort, and a limit between 1 and 500. Patterns have no `/delimiters/`; use `i` for case-insensitive matching.
-4. Click **Search with regex**. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
+1. Optionally enter a **Candidate name query**, such as `Qwen`. This is ordinary Hub name search, not advanced syntax or card search.
+2. Enter a name query, a card query, or both. When both are provided, a model must match both. For example, name `+Qwen +7B -GPTQ *GGUF` and card `+"tool calling" -experimental`.
+3. Choose candidate sort and a limit between 1 and 500, then click **Search**. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
 
-This scans a bounded candidate sample, **not all cards on the Hub**. Leave the candidate query empty to scan top models in the selected sort order. Narrow the query to increase coverage of a family; broaden it if you are looking for a term present only in cards. The explorer's date, parameter, and quantization filters below are independent of the regex panel.
+Standard search matches case-insensitively anywhere in the text. All terms are ANDed, whether or not they have a `+` prefix. This is Google-style syntax, not Google's ranking or query-expansion behavior:
 
-Card scans use one additional request per name-matching candidate, through the existing shared rate limiter. Successful cards are cached by revision (up to 200); **Clear Cache** clears them. Missing, gated, or otherwise unreadable cards and cards over 1 MB are counted as skipped, not searched. Readme content is never rendered as HTML. Patterns run in a disposable Web Worker with a 300 ms matching timeout so expensive expressions cannot freeze the UI. Invalid patterns and unsupported flags produce errors before candidate requests.
+| Syntax | Meaning |
+| --- | --- |
+| `qwen gguf` or `+qwen +gguf` | Require both terms, in any order |
+| `-gptq` or `-"experimental model"` | Exclude a term or phrase |
+| `"tool calling"` | Match the adjacent phrase, including its literal spacing |
+| `Qwen*GGUF` | Match zero or more characters between Qwen and GGUF, including spaces/newlines |
+| `Qwen?` | Match Qwen followed by exactly one character |
+| `a*{2,5}b` | Match a, then 2–5 characters, then b |
+| `a*{3}b` / `a*{2,}b` | Match exactly 3 / at least 2 intervening characters |
+| `\*`, `\?`, `\"`, `\\` | Match literal operators, quotes, or backslashes |
+
+Wildcard bounds must be ordered nonnegative integers up to 10,000. Quotes may contain wildcards. Other regex punctuation is literal in standard mode; unmatched quotes, incomplete escapes, and malformed ranges produce errors before fetching candidates. A query consisting only of exclusions is supported.
+
+For regex mode, toggle **Use regular expressions** and enter patterns without `/delimiters/`, e.g. name `Qwen.*(7B|8B).*GGUF$` and card `tool[ -]?calling|function calling`. Choose `i`, `m`, `s`, and/or `u` flags. Flags are hidden and ignored in standard mode. Toggling modes preserves the input text; it does not translate between query languages.
+
+This scans a bounded candidate sample, **not all cards on the Hub**. Leave the candidate query empty to scan top models in the selected sort order. Narrow the query to increase coverage of a family; broaden it if you are looking for a term present only in cards. The explorer's date, parameter, and quantization filters below are independent of this search panel.
+
+Card scans use one additional request per name-matching candidate, through the existing shared rate limiter. Successful cards are cached by revision (up to 200); **Clear Cache** clears them. Missing, gated, or otherwise unreadable cards and cards over 1 MB are counted as skipped, not searched. Readme content is never rendered as HTML. Both search modes run in a disposable Web Worker with a 300 ms matching timeout so expensive expressions cannot freeze the UI.
 
 Run regression checks with `node tests/regex-search-test.cjs`.
 
