@@ -1,5 +1,17 @@
 # Changelog — Streamlined HF Model Search
 
+### v261023.03 — README panel, browser save and richer sorts
+
+- Added bounded README.md loading through the selected API transport and
+  safe local Markdown rendering with a raw-text view.
+- Added browser-native streamed file save and optional HEAD-based delivery URL
+  inspection alongside the original file links; errors remain visible.
+- Added latest-update, derivative-count and per-base popularity sorting on
+  the main author search results, with direction choices and column sorting.
+- Expanded regression coverage for Markdown safety, file delivery, request
+  bounds and author aggregations.
+
+
 ### v261023.02 — API model inspection and direct file links
 
 - Added a locally rendered model detail dialog and exact model-ID lookup,

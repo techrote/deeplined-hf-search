@@ -294,6 +294,32 @@
   #model-inspector .inspect-file-note { color:#a5b9cb; font-size:0.78rem; margin:7px 0; }
   #model-inspector #inspector-link-fallback { margin-top:8px; width:100%; min-height:55px; background:#0d1117; color:#e6edf3; border:1px solid #3e5267; border-radius:5px; padding:8px; }
   @media (max-width:600px) { #model-inspector .inspect-facts { grid-template-columns:1fr; gap:3px; } #model-inspector .inspect-file-table td:last-child { white-space:normal; } }
+  #main-sort-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0; padding:8px 10px; border:1px solid #30363d; border-radius:6px; background:#161b22; font-size:0.8rem; }
+  #main-sort-toolbar label { color:#a5b9cb; font-weight:600; }
+  #main-sort-toolbar select { padding:6px 8px; color:#e6edf3; border:1px solid #30363d; border-radius:5px; background:#0d1117; }
+  #main-sort-toolbar select:focus-visible { outline:2px solid #58a6ff; }
+  .main-sort-description { color:#889bac; font-size:0.73rem; }
+
+  #model-inspector .inspect-markdown { font-size:0.85rem; line-height:1.5; margin:12px 4px; overflow-wrap:anywhere; }
+  #model-inspector .inspect-markdown h1, #model-inspector .inspect-markdown h2,
+  #model-inspector .inspect-markdown h3, #model-inspector .inspect-markdown h4 {
+    margin:16px 0 6px; color:#e6edf3; line-height:1.25;
+  }
+  #model-inspector .inspect-markdown h1 { font-size:1.3rem; }
+  #model-inspector .inspect-markdown h2 { font-size:1.15rem; }
+  #model-inspector .inspect-markdown h3 { font-size:1.04rem; }
+  #model-inspector .inspect-markdown p { margin:8px 0; }
+  #model-inspector .inspect-markdown ul, #model-inspector .inspect-markdown ol { padding-left:23px; margin:8px 0; }
+  #model-inspector .inspect-markdown li { margin:3px 0; }
+  #model-inspector .inspect-markdown pre { background:#161b22; border:1px solid #30363d; border-radius:5px; padding:10px; overflow:auto; max-height:none; font-size:0.79rem; }
+  #model-inspector .inspect-markdown code { background:#252b33; padding:1px 4px; border-radius:3px; }
+  #model-inspector .inspect-markdown blockquote { border-left:3px solid #526b83; padding:3px 12px; color:#b6c4d5; }
+  #model-inspector .inspect-markdown a { color:#78bafb; }
+  #model-inspector .inspect-markdown table { display:block; overflow-x:auto; border-collapse:collapse; width:max-content; max-width:100%; }
+  #model-inspector .inspect-markdown th, #model-inspector .inspect-markdown td { border:1px solid #30363d; padding:5px 9px; text-align:left; }
+  #model-inspector .inspect-markdown hr { border:0; border-top:1px solid #30363d; margin:12px 0; }
+  #model-inspector #inspector-download-status { padding:6px 0; }
+  #model-inspector .inspect-file-table button { margin:2px 3px 2px 0; font-size:0.75rem; }
 </style>
 </head>
 <body>
@@ -404,13 +430,37 @@
   <button id="inspect-model-go" type="button">Inspect</button>
   <span id="inspect-lookup-result" role="status" aria-live="polite"></span>
 </section>
+<div id="main-sort-toolbar" role="group" aria-label="Author results sorting">
+  <label for="main-sort-select">Sort authors by</label>
+  <select id="main-sort-select">
+    <option value="totalDownloads|desc">Total downloads — most</option>
+    <option value="totalDownloads|asc">Total downloads — fewest</option>
+    <option value="totalLikes|desc">Total likes — most</option>
+    <option value="totalLikes|asc">Total likes — fewest</option>
+    <option value="count|desc">Base models — most</option>
+    <option value="count|asc">Base models — fewest</option>
+    <option value="derivativeCount|desc">Matching derivatives — most</option>
+    <option value="derivativeCount|asc">Matching derivatives — fewest</option>
+    <option value="latestUpdate|desc">Latest model update — newest</option>
+    <option value="latestUpdate|asc">Latest model update — oldest</option>
+    <option value="avgBaseDownloads|desc">Average base downloads — highest</option>
+    <option value="avgBaseDownloads|asc">Average base downloads — lowest</option>
+    <option value="avgBaseLikes|desc">Average base likes — highest</option>
+    <option value="avgBaseLikes|asc">Average base likes — lowest</option>
+    <option value="author|asc">Author A–Z</option>
+    <option value="author|desc">Author Z–A</option>
+  </select>
+  <span class="main-sort-description">Table headings also sort. Results reflect active filters.</span>
+</div>
 <table id="main-table" aria-label="Authors and base model counts">
   <thead>
     <tr>
       <th data-key="author" scope="col" tabindex="0">Base Model Authors<span class="arrow"></span></th>
       <th data-key="count" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Base Models</th>
+      <th data-key="derivativeCount" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Derivatives</th>
       <th data-key="totalDownloads" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Total Downloads</th>
       <th data-key="totalLikes" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Total Likes</th>
+      <th data-key="latestUpdate" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Latest Update</th>
     </tr>
   </thead>
   <tbody id="body"></tbody>
@@ -422,6 +472,15 @@
   <div class="inspect-content">
     <p id="inspector-status" class="inspect-status" role="status" aria-live="polite"></p>
     <div id="inspector-details"></div>
+    <details id="inspector-readme-panel" open>
+      <summary>README.md — model card</summary>
+      <p id="inspector-readme-status" class="inspect-file-note" role="status" aria-live="polite">Select a model to load its README.</p>
+      <div id="inspector-readme-content" class="inspect-markdown"></div>
+      <details id="inspector-readme-raw-panel" hidden>
+        <summary>View raw Markdown</summary>
+        <pre id="inspector-readme-raw"></pre>
+      </details>
+    </details>
     <section id="inspector-file-section" hidden aria-label="Repository files and download links">
       <h3>Repository files and direct download links</h3>
       <p id="inspector-file-revision" class="inspect-file-note"></p>
@@ -432,6 +491,8 @@
         <button id="inspector-copy-matching" type="button">Copy matching links</button>
       </div>
       <p id="inspector-file-notice" class="inspect-file-note" role="status"></p>
+      <p id="inspector-download-status" class="inspect-file-note" role="status" aria-live="polite">File links are versioned when a revision SHA is available.</p>
+      <button id="inspector-cancel-save" type="button" hidden>Cancel current download</button>
       <div class="inspect-file-scroll">
         <table class="inspect-file-table"><thead><tr><th scope="col">File</th><th scope="col">Size</th><th scope="col">Actions</th></tr></thead><tbody id="inspector-file-rows"></tbody></table>
       </div>
@@ -450,7 +511,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '261023.02';
+const APP_VERSION = '261023.03';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -842,7 +903,11 @@ const RenderCoordinator = {
             id: author,
             count: l1Node.aggCount,
             totalDownloads: l1Node.aggDownloads,
-            totalLikes: l1Node.aggLikes
+            totalLikes: l1Node.aggLikes,
+            derivativeCount: l1Node.aggDerivativeCount || 0,
+            avgBaseDownloads: l1Node.aggCount ? l1Node.aggBaseDownloads / l1Node.aggCount : 0,
+            avgBaseLikes: l1Node.aggCount ? l1Node.aggBaseLikes / l1Node.aggCount : 0,
+            latestUpdate: l1Node.aggLatestUpdate || 0
           });
         }
       }
@@ -1199,6 +1264,7 @@ function invalidateDomPrefix(prefix) { for (const k of _domCache) if (k[0].start
 
 // ── State Reset (Clear Cache) ──
 function resetAppState() {
+  inspectorCancelFileTransfer();
   _inspectorSession++;
   const inspector = document.getElementById("model-inspector");
   if (inspector && inspector.open) inspector.close();
@@ -1251,20 +1317,65 @@ let _uiRafId = null;
 function fetchJson(url) {
   try { url = resolveHubApiUrl(url); }
   catch (error) { return Promise.reject(error); }
-  const existing = _inflightFetches.get(url);
+  return fetchQueuedResource(url, "json");
+}
+
+function fetchText(url) {
+  try { url = resolveHubApiUrl(url); }
+  catch (error) { return Promise.reject(error); }
+  return fetchQueuedResource(url, "text");
+}
+
+function fetchQueuedResource(url, responseType) {
+  const key = responseType === "json" ? url : "text:" + url;
+  const existing = _inflightFetches.get(key);
   if (existing) return existing;
 
   let resolve, reject;
   const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
-  _workQueue.push({ url, resolve, reject });
+  _workQueue.push({ url, key, responseType, resolve, reject });
   _scheduleDequeue();
 
-  _inflightFetches.set(url, promise);
+  _inflightFetches.set(key, promise);
   const forget = () => {
-    if (_inflightFetches.get(url) === promise) _inflightFetches.delete(url);
+    if (_inflightFetches.get(key) === promise) _inflightFetches.delete(key);
   };
   promise.then(forget, forget);
   return promise;
+}
+
+// Bound untrusted README responses before decoding or rendering them. The
+// queue retains cancellation, rate limiting and selected API transport.
+async function readLimitedTextResponse(response, limit = 1024 * 1024) {
+  const contentType = response.headers.get("content-type") || "";
+  if (/text\/html/i.test(contentType)) throw new Error("Unexpected HTML response instead of Markdown");
+  const advertised = Number(response.headers.get("content-length"));
+  if (Number.isFinite(advertised) && advertised > limit) {
+    throw new Error("README exceeds the 1 MiB display limit");
+  }
+  if (!response.body || !response.body.getReader) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.byteLength > limit) throw new Error("README exceeds the 1 MiB display limit");
+    return new TextDecoder().decode(bytes);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0, value = "";
+  try {
+    while (true) {
+      const next = await reader.read();
+      if (next.done) break;
+      size += next.value.byteLength;
+      if (size > limit) throw new Error("README exceeds the 1 MiB display limit");
+      value += decoder.decode(next.value, { stream: true });
+    }
+    return value + decoder.decode();
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function _scheduleDequeue() {
@@ -1312,7 +1423,8 @@ function _dispatchFetchWithRetry(item, gen, retries) {
   if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
   const controller = new AbortController();
   _inflightControllers.set(item.url, controller);
-  const timer = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), item.responseType === "text" ? 15000 : CONFIG.FETCH_TIMEOUT);
+  const maxRetries = item.responseType === "text" ? 0 : CONFIG.MAX_RETRIES;
 
   fetch(item.url, { signal: controller.signal })
     .then(async res => {
@@ -1322,21 +1434,24 @@ function _dispatchFetchWithRetry(item, gen, retries) {
       if (res.ok) {
         _consecutive429s = 0;
         updateRateLimitUI(false);
-        const text = await res.text();
+        const text = item.responseType === "text" ?
+          await readLimitedTextResponse(res) : await res.text();
         _totalBytesReceived += new TextEncoder().encode(text).length;
         incApiCalls(1);
-        let data;
-        try { data = JSON.parse(text); } catch (e) {
-          _inflightCount--;
-          item.reject(new Error("Invalid JSON response"));
-          _dequeueNext();
-          return;
+        let data = text;
+        if (item.responseType !== "text") {
+          try { data = JSON.parse(text); } catch (e) {
+            _inflightCount--;
+            item.reject(new Error("Invalid JSON response"));
+            _dequeueNext();
+            return;
+          }
         }
         if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
         _inflightCount--;
         item.resolve(data);
         _dequeueNext();
-      } else if ((res.status === 429 || res.status >= 500) && retries < CONFIG.MAX_RETRIES) {
+      } else if ((res.status === 429 || res.status >= 500) && retries < maxRetries) {
         const nextRetry = retries + 1;
         let delay;
         if (res.status === 429) {
@@ -1372,7 +1487,7 @@ function _dispatchFetchWithRetry(item, gen, retries) {
       if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
       _consecutive429s = 0;
       updateRateLimitUI(false);
-      if (retries < CONFIG.MAX_RETRIES) {
+      if (retries < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, retries), 30000);
         console.warn(`Network error for ${item.url}, retry ${retries + 1}/${CONFIG.MAX_RETRIES} in ${delay}ms`);
         _inflightCount--;
@@ -2148,15 +2263,39 @@ function runFilterPipeline() {
  */
 function walkFilterL1(node) {
   let count = 0, dl = 0, lk = 0, totalCanonical = 0;
+  let derivativeCount = 0, baseDownloads = 0, baseLikes = 0, latestUpdate = 0;
+  const considerDate = ref => {
+    if (!ref || !ref.lastModified) return;
+    const time = Date.parse(ref.lastModified);
+    if (Number.isFinite(time)) latestUpdate = Math.max(latestUpdate, time);
+  };
   for (const l2Node of node.children.values()) {
     const r = walkFilterL2(l2Node);
     if (l2Node.canonical) totalCanonical++;
-    if (l2Node.display && l2Node.canonical) count++;
+    if (l2Node.display && l2Node.canonical) {
+      count++;
+      const base = l2Node.modelRef;
+      baseDownloads += base ? (base.downloads || 0) : 0;
+      baseLikes += base ? (base.likes || 0) : 0;
+      considerDate(base);
+    }
     dl += r.downloads; lk += r.likes;
+    if (!l2Node.display || !l2Node.canonical) continue;
+    for (const authorGroup of l2Node.children.values()) {
+      if (!authorGroup.display) continue;
+      derivativeCount += authorGroup.aggCount || 0;
+      for (const child of authorGroup.children.values()) {
+        if (child.display) considerDate(child.modelRef);
+      }
+    }
   }
   node.aggCount = count;
   node.aggDownloads = dl;
   node.aggLikes = lk;
+  node.aggDerivativeCount = derivativeCount;
+  node.aggBaseDownloads = baseDownloads;
+  node.aggBaseLikes = baseLikes;
+  node.aggLatestUpdate = latestUpdate;
   node.display = count > 0;
   node.totalChildren = totalCanonical;
 }
@@ -2293,7 +2432,7 @@ function walkFilterL4(node) {
 
 // ── Sort Utilities ──
 //   sortCoerce → _cmp → sortRows
-const _NUMERIC_SORT_KEYS = new Set(["downloads", "likes", "totalDownloads", "totalLikes", "count", "paramB"]);
+const _NUMERIC_SORT_KEYS = new Set(["downloads", "likes", "totalDownloads", "totalLikes", "count", "paramB", "derivativeCount", "avgBaseDownloads", "avgBaseLikes", "latestUpdate"]);
 function sortCoerce(v, k) {
   if (_NUMERIC_SORT_KEYS.has(k)) return Number(v);
   if (k.includes("Modified")) { const t = new Date(v || 0).getTime(); return Number.isNaN(t) ? Infinity : t; }
@@ -2303,6 +2442,10 @@ function sortCoerce(v, k) {
 function _cmp(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
 function sortRows(rows, key, asc, subKey) {
   return rows.slice().sort((x, y) => {
+    if (key === "latestUpdate") {
+      if (!x.latestUpdate && y.latestUpdate) return 1;
+      if (x.latestUpdate && !y.latestUpdate) return -1;
+    }
     let va = sortCoerce(x[key], key), vb = sortCoerce(y[key], key);
     let r = typeof va === 'number' && typeof vb === 'number' ? _cmp(va, vb) : _cmp(va, vb);
     if (r !== 0) return asc ? r : -r;
@@ -2959,6 +3102,8 @@ function updateArrows() {
     if (active) th.setAttribute("aria-sort", RC.sortAsc ? "ascending" : "descending");
     else th.removeAttribute("aria-sort");
   });
+  const selector = document.getElementById("main-sort-select");
+  if (selector) selector.value = RC.sortKey + "|" + (RC.sortAsc ? "asc" : "desc");
   const ann = document.getElementById("sort-announce");
   if (ann) ann.textContent = `Sorted by ${RC.sortKey} ${RC.sortAsc ? "ascending" : "descending"}`;
 }
@@ -3056,10 +3201,12 @@ function renderMain(authorData, skipSort) {
     return `<tr class="l1-row ${zebra}" data-l1-idx="${idx}" data-author="${escapeHtml(a.author)}">
       <td><button type="button" class="toggle" id="t1-${idx}" aria-expanded="false" aria-label="Expand ${escapeHtml(a.author)} models">▶</button><a href="https://huggingface.co/${escapeHtml(a.author)}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.author)}</a></td>
       <td class="right">${a.count}</td>
+      <td class="right">${fmt(a.derivativeCount || 0)}</td>
       <td class="right">${fmt(a.totalDownloads)}</td>
       <td class="right">${fmt(a.totalLikes)}</td>
+      <td class="right">${a.latestUpdate ? fmtDate(a.latestUpdate) : "—"}</td>
     </tr>
-    <tr class="detail-row" id="d1-${idx}" style="display:none" aria-labelledby="t1-${idx}"><td colspan="4"><div class="detail-inner" id="i1-${idx}"></div></td></tr>`;
+    <tr class="detail-row" id="d1-${idx}" style="display:none" aria-labelledby="t1-${idx}"><td colspan="6"><div class="detail-inner" id="i1-${idx}"></div></td></tr>`;
   }).join('');
 
   tbody.innerHTML = html;
@@ -3995,6 +4142,157 @@ function inspectorRenderedModelDetails(info) {
   }
 }
 
+// ── Browser-native file delivery ──
+// The standard Hub file URL remains available. Some browser policies allow
+// metadata fetches but block navigation to file URLs, so offer an explicit,
+// user-initiated streaming save as an alternative. No file buffering or proxy.
+let _inspectorFileTransfer = null;
+
+function inspectorCancelFileTransfer() {
+  if (_inspectorFileTransfer) _inspectorFileTransfer.abort();
+}
+
+function inspectorDownloadStatus(message) {
+  const node = document.getElementById("inspector-download-status");
+  if (node) node.textContent = message;
+}
+
+async function inspectorStreamSave(path) {
+  const file = _inspectorState.files.find(entry => entry.path === path);
+  if (!file || !validInspectorFilePath(path)) {
+    inspectorDownloadStatus("Unknown or invalid file path.");
+    return;
+  }
+  if (_inspectorFileTransfer) {
+    inspectorDownloadStatus("A download is already active. Cancel it before starting another.");
+    return;
+  }
+  if (typeof window.showSaveFilePicker !== "function") {
+    inspectorDownloadStatus("This browser does not support streaming file saves. Use Open URL or Copy link.");
+    return;
+  }
+
+  const session = _inspectorSession;
+  const modelId = _inspectorState.id, revision = _inspectorState.revision;
+  const url = inspectorDownloadUrl(modelId, revision, path);
+  const name = path.split("/").pop();
+  let destination;
+  try {
+    // Must be invoked directly from the button gesture, before any fetch.
+    destination = await window.showSaveFilePicker({ suggestedName: name });
+  } catch (error) {
+    inspectorDownloadStatus(error && error.name === "AbortError" ?
+      "Save cancelled." : "Could not select a destination: " + error.message);
+    return;
+  }
+  if (session !== _inspectorSession) return;
+
+  const controller = new AbortController();
+  _inspectorFileTransfer = controller;
+  const cancel = document.getElementById("inspector-cancel-save");
+  cancel.hidden = false;
+  let writable = null, reader = null, received = 0, lastUpdate = 0;
+  try {
+    inspectorDownloadStatus("Connecting to the original file endpoint for " + name + "…");
+    const response = await fetch(url, {
+      method: "GET", credentials: "omit", redirect: "follow",
+      cache: "no-store", signal: controller.signal
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    if (!response.body || typeof response.body.getReader !== "function") {
+      throw new Error("Streaming response is unavailable in this browser");
+    }
+    writable = await destination.createWritable();
+    reader = response.body.getReader();
+    const advertised = Number(response.headers.get("content-length"));
+    const expected = Number.isFinite(advertised) && advertised > 0 ? advertised : file.size;
+    while (true) {
+      if (controller.signal.aborted) throw new Error("Download cancelled");
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      await writable.write(chunk.value);
+      received += chunk.value.byteLength;
+      const now = Date.now();
+      if (now - lastUpdate > 350 && session === _inspectorSession) {
+        const pct = expected ? " / " + inspectorFileSizeLabel(expected) +
+          " (" + Math.min(100, Math.round(received / expected * 100)) + "%)" : "";
+        inspectorDownloadStatus("Saving " + name + ": " +
+          inspectorFileSizeLabel(received) + pct);
+        lastUpdate = now;
+      }
+    }
+    await writable.close();
+    writable = null;
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus("Saved " + name + " (" +
+        inspectorFileSizeLabel(received) + ").");
+    }
+  } catch (error) {
+    if (writable) await writable.abort().catch(() => {});
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus(controller.signal.aborted ?
+        "Download cancelled; incomplete output was discarded." :
+        "Browser streaming failed: " + error.message +
+        ". Try Open URL, Resolve delivery URL or Copy link; CORS and network rules may differ.");
+    }
+  } finally {
+    if (reader) { try { reader.releaseLock(); } catch { /* Closed or cancelled stream. */ } }
+    if (_inspectorFileTransfer === controller) {
+      _inspectorFileTransfer = null;
+      cancel.hidden = true;
+    }
+  }
+}
+
+// Resolve a signed delivery destination with a HEAD request (no model bytes).
+// This is best-effort: the redirected CDN can still reject browser CORS.
+async function inspectorResolveDelivery(path, rowButton) {
+  if (!_inspectorState.files.some(file => file.path === path)) return;
+  const session = _inspectorSession;
+  const url = inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, path);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  rowButton.disabled = true;
+  inspectorDownloadStatus("Looking up the file delivery address (HEAD request only)…");
+  try {
+    const response = await fetch(url, {
+      method: "HEAD", credentials: "omit", redirect: "follow",
+      cache: "no-store", signal: controller.signal
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    if (session !== _inspectorSession || !rowButton.isConnected) return;
+    const resolved = new URL(response.url);
+    if (resolved.protocol !== "https:") throw new Error("Non-HTTPS delivery destination");
+    if (resolved.href === url) {
+      inspectorDownloadStatus("No separate delivery URL was provided. Use Open URL or Save (stream).");
+      return;
+    }
+    // Signed CDN URLs often expire; only display them for this model session.
+    const container = rowButton.parentElement;
+    let destination = container.querySelector("a[data-delivery-link]");
+    if (!destination) {
+      destination = document.createElement("a");
+      destination.dataset.deliveryLink = "true";
+      destination.target = "_blank";
+      destination.rel = "noopener noreferrer";
+      destination.textContent = "Open delivery URL";
+      container.append(destination);
+    }
+    destination.href = resolved.href;
+    rowButton.dataset.resolvedUrl = resolved.href;
+    rowButton.textContent = "Copy delivery URL";
+    inspectorDownloadStatus("Resolved an HTTPS delivery address. This temporary URL may expire.");
+  } catch (error) {
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus("Could not resolve delivery URL: " + error.message +
+        ". The original file URL remains available.");
+    }
+  } finally {
+    clearTimeout(timeout);
+    rowButton.disabled = false;
+  }
+}
+
 function inspectorMatchingFiles() {
   const term = document.getElementById("inspector-file-filter").value.toLowerCase().trim();
   const weightsOnly = document.getElementById("inspector-weights-only").checked;
@@ -4016,17 +4314,27 @@ function renderInspectorFiles() {
     const actions = document.createElement("td");
     const url = inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, file.path);
     const a = document.createElement("a");
-    a.textContent = "Download";
+    a.textContent = "Open URL";
     a.href = url;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
-    a.title = "Open the original file download URL";
+    a.title = "Open the original Hugging Face file URL (may be restricted in some browsers)";
     const copy = document.createElement("button");
     copy.type = "button";
     copy.textContent = "Copy link";
     copy.dataset.downloadPath = file.path;
     copy.setAttribute("aria-label", "Copy direct download link for " + file.path);
-    actions.append(a, copy);
+    const save = document.createElement("button");
+    save.type = "button";
+    save.textContent = "Save (stream)";
+    save.dataset.savePath = file.path;
+    save.title = "Stream a file to disk in a compatible browser without buffering the whole model";
+    const resolve = document.createElement("button");
+    resolve.type = "button";
+    resolve.textContent = "Resolve delivery URL";
+    resolve.dataset.resolvePath = file.path;
+    resolve.title = "Inspect the server's redirect destination without downloading the model";
+    actions.append(a, save, resolve, copy);
     tr.append(name, size, actions);
     rows.append(tr);
   }
@@ -4053,6 +4361,208 @@ async function inspectorCopyLinks(text) {
   fallback.focus();
   fallback.select();
   status.textContent = "Clipboard access unavailable; select and copy the links shown below.";
+}
+
+// ── Model card README reader ──
+// Build safe DOM nodes from untrusted Markdown: no raw HTML evaluation.
+function inspectorReadmeUrl(modelId, revision, route = "raw") {
+  if (route !== "raw" && route !== "resolve") throw new Error("Unsupported README route.");
+  const id = normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+  if (!/^(?:[0-9a-f]{40}|main)$/i.test(revision)) throw new Error("Invalid README revision.");
+  return "https://huggingface.co/" + id + "/" + route + "/" +
+    encodeURIComponent(revision) + "/README.md";
+}
+
+function inspectorSafeMarkdownUrl(target, modelId, revision) {
+  if (typeof target !== "string" || !target.trim() || target.length > 2048) return null;
+  try {
+    const base = "https://huggingface.co/" +
+      normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/") +
+      "/blob/" + encodeURIComponent(revision) + "/";
+    const result = new URL(target.trim(), base);
+    return result.protocol === "https:" || result.protocol === "http:" ? result.href : null;
+  } catch { return null; }
+}
+
+function inspectorAppendInline(parent, source, modelId, revision) {
+  const raw = String(source || "");
+  const token = /(!?\[([^\]]+)\]\(([^)\s]+)\)|\x60([^\x60]+)\x60|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_)/g;
+  let offset = 0, found;
+  while ((found = token.exec(raw))) {
+    if (found.index > offset) parent.append(document.createTextNode(raw.slice(offset, found.index)));
+    let node;
+    if (found[2] !== undefined) {
+      const url = inspectorSafeMarkdownUrl(found[3], modelId, revision);
+      if (url) {
+        node = document.createElement("a");
+        node.href = url;
+        node.target = "_blank";
+        node.rel = "noopener noreferrer";
+        node.textContent = (found[1].startsWith("!") ? "Image: " : "") + found[2];
+      } else node = document.createTextNode(found[1]);
+    } else if (found[4] !== undefined) {
+      node = document.createElement("code");
+      node.textContent = found[4];
+    } else {
+      node = document.createElement(found[5] !== undefined || found[6] !== undefined ? "strong" : "em");
+      node.textContent = found[5] || found[6] || found[7] || found[8];
+    }
+    parent.append(node);
+    offset = token.lastIndex;
+  }
+  if (offset < raw.length) parent.append(document.createTextNode(raw.slice(offset)));
+}
+
+function inspectorTableCells(line) {
+  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
+}
+function inspectorIsTableDelimiter(line) {
+  return /^\s*\|?\s*:?-{3,}:?\s*\|(?:\s*:?-{3,}:?\s*\|?)+\s*$/.test(line);
+}
+
+function inspectorRenderMarkdown(markdown, target, modelId, revision) {
+  target.replaceChildren();
+  const lines = String(markdown || "").replace(/\r\n?/g, "\n").split("\n");
+  const maxLines = 1800;
+  const n = Math.min(lines.length, maxLines);
+  let i = 0;
+  // YAML front matter is shown in the separate structured metadata panel.
+  if (lines[0] === "---") {
+    const end = lines.findIndex((line, index) => index > 0 && index < 120 && (line === "---" || line === "..."));
+    if (end > 0) i = end + 1;
+  }
+
+  const add = (type, text) => {
+    const el = document.createElement(type);
+    inspectorAppendInline(el, text, modelId, revision);
+    target.append(el);
+    return el;
+  };
+  const blockStart = text =>
+    /^\s*(?:#{1,6}\s|>|[-*+]\s|\d+[.)]\s|\x60{3}|~{3})/.test(text) ||
+    /^\s*(?:---+|\*\*\*+)\s*$/.test(text);
+
+  while (i < n) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
+
+    const fence = line.match(/^\s*(\x60{3,}|~{3,})/);
+    if (fence) {
+      const marker = fence[1][0], minLength = fence[1].length;
+      const content = [];
+      i++;
+      while (i < n) {
+        if (new RegExp("^\\s*" + marker + "{" + minLength + ",}\\s*$").test(lines[i])) { i++; break; }
+        content.push(lines[i++]);
+      }
+      const pre = document.createElement("pre"), code = document.createElement("code");
+      code.textContent = content.join("\n");
+      pre.append(code); target.append(pre); continue;
+    }
+
+    const heading = line.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) { add("h" + heading[1].length, heading[2]); i++; continue; }
+
+    if (/^\s*(?:---+|\*\*\*+)\s*$/.test(line)) {
+      target.append(document.createElement("hr")); i++; continue;
+    }
+
+    if (i + 1 < n && /^\s*\|.*\|\s*$/.test(line) && inspectorIsTableDelimiter(lines[i + 1])) {
+      const headers = inspectorTableCells(line), table = document.createElement("table");
+      const thead = document.createElement("thead"), hrow = document.createElement("tr");
+      for (const cell of headers) {
+        const th = document.createElement("th");
+        inspectorAppendInline(th, cell, modelId, revision); hrow.append(th);
+      }
+      thead.append(hrow); table.append(thead);
+      const tbody = document.createElement("tbody");
+      i += 2;
+      while (i < n && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        const tr = document.createElement("tr"), cells = inspectorTableCells(lines[i++]);
+        for (let j = 0; j < headers.length; j++) {
+          const td = document.createElement("td");
+          inspectorAppendInline(td, cells[j] || "", modelId, revision); tr.append(td);
+        }
+        tbody.append(tr);
+      }
+      table.append(tbody); target.append(table); continue;
+    }
+
+    const list = line.match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+    if (list) {
+      const ordered = /^\d/.test(list[1]), el = document.createElement(ordered ? "ol" : "ul");
+      while (i < n) {
+        const next = lines[i].match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+        if (!next || ordered !== /^\d/.test(next[1])) break;
+        const li = document.createElement("li");
+        inspectorAppendInline(li, next[2], modelId, revision); el.append(li); i++;
+      }
+      target.append(el); continue;
+    }
+
+    if (/^\s*>\s?/.test(line)) {
+      const block = document.createElement("blockquote"), parts = [];
+      while (i < n && /^\s*>\s?/.test(lines[i])) parts.push(lines[i++].replace(/^\s*>\s?/, ""));
+      inspectorAppendInline(block, parts.join(" "), modelId, revision);
+      target.append(block); continue;
+    }
+
+    const paragraph = [];
+    while (i < n && lines[i].trim() &&
+      (paragraph.length === 0 || (!blockStart(lines[i]) &&
+        !(i + 1 < n && inspectorIsTableDelimiter(lines[i + 1]))))) {
+      paragraph.push(lines[i++].trim());
+    }
+    if (paragraph.length) add("p", paragraph.join(" "));
+    else i++;
+  }
+  if (n < lines.length) add("p", "README preview truncated after " + maxLines +
+    " lines. The Raw Markdown panel contains the complete bounded response.");
+}
+
+async function loadInspectorReadme(modelId, revision, current) {
+  const status = document.getElementById("inspector-readme-status");
+  const content = document.getElementById("inspector-readme-content");
+  const rawPanel = document.getElementById("inspector-readme-raw-panel");
+  const rawPre = document.getElementById("inspector-readme-raw");
+  status.textContent = "Retrieving README.md…";
+  content.replaceChildren();
+  rawPanel.hidden = true;
+  let markdown, lastError;
+  for (const route of ["raw", "resolve"]) {
+    try {
+      markdown = await fetchText(inspectorReadmeUrl(modelId, revision, route));
+      if (!current()) return;
+      if (typeof markdown !== "string" || !markdown.trim()) throw new Error("Empty README response");
+      if (/^\s*(?:<!doctype\s+html\b|<html[\s>])/i.test(markdown)) {
+        throw new Error("README endpoint returned an HTML page instead of Markdown");
+      }
+      break;
+    } catch (error) {
+      if (!current()) return;
+      lastError = error;
+    }
+  }
+  if (!current()) return;
+  if (markdown === undefined) {
+    status.textContent = "README.md could not be retrieved (" +
+      (lastError ? lastError.message : "unknown error") +
+      "). Structured model-card fields remain available in the metadata panel.";
+    return;
+  }
+  try {
+    inspectorRenderMarkdown(markdown, content, modelId, revision);
+    rawPre.textContent = markdown;
+    rawPanel.hidden = false;
+    status.textContent = "README.md rendered locally from the model repository (" +
+      (markdown.length / 1024).toFixed(0) + " KiB). Raw Markdown is also available.";
+  } catch (error) {
+    content.replaceChildren();
+    rawPre.textContent = markdown;
+    rawPanel.hidden = false;
+    status.textContent = "Formatted rendering unavailable (" + error.message +
+      "). Use the Raw Markdown panel.";
+  }
 }
 
 async function inspectorFetchModelInfo(modelId) {
@@ -4093,10 +4603,16 @@ async function openModelInspector(input) {
   _inspectorState.manifestNote = "";
   document.getElementById("inspector-title").textContent = requested;
   document.getElementById("inspector-details").replaceChildren();
+  document.getElementById("inspector-readme-panel").open = true;
+  document.getElementById("inspector-readme-content").replaceChildren();
+  document.getElementById("inspector-readme-status").textContent = "Waiting for model metadata…";
+  document.getElementById("inspector-readme-raw-panel").hidden = true;
   document.getElementById("inspector-file-section").hidden = true;
   document.getElementById("inspector-file-filter").value = "";
   document.getElementById("inspector-weights-only").checked = false;
   document.getElementById("inspector-link-fallback").hidden = true;
+  inspectorCancelFileTransfer();
+  inspectorDownloadStatus("Direct file links are shown below. Save (stream) uses browser Fetch if supported.");
   document.getElementById("inspector-status").textContent = "Fetching model metadata from selected API source…";
   if (!dialog.open) dialog.showModal();
 
@@ -4120,6 +4636,8 @@ async function openModelInspector(input) {
       "Links use a pinned model revision.");
     document.getElementById("inspector-title").textContent = canonicalId;
     inspectorRenderedModelDetails(info);
+    // README failure must not prevent using structured metadata or file links.
+    loadInspectorReadme(canonicalId, _inspectorState.revision, current);
     const section = document.getElementById("inspector-file-section");
     section.hidden = false;
     document.getElementById("inspector-file-revision").textContent = "Download revision: " +
@@ -4162,7 +4680,7 @@ function setupModelInspector() {
     if (event.key === "Enter") { event.preventDefault(); submit(); }
   });
   document.getElementById("inspector-close").addEventListener("click", () => dialog.close());
-  dialog.addEventListener("close", () => { _inspectorSession++; });
+  dialog.addEventListener("close", () => { _inspectorSession++; inspectorCancelFileTransfer(); });
   document.getElementById("inspector-file-filter").addEventListener("input", renderInspectorFiles);
   document.getElementById("inspector-weights-only").addEventListener("change", renderInspectorFiles);
 
@@ -4183,11 +4701,21 @@ function setupModelInspector() {
   });
 
   document.getElementById("inspector-file-rows").addEventListener("click", event => {
-    const button = event.target.closest("button[data-download-path]");
-    if (!button) return;
-    inspectorCopyLinks(inspectorDownloadUrl(
-      _inspectorState.id, _inspectorState.revision, button.dataset.downloadPath));
+    const copy = event.target.closest("button[data-download-path]");
+    if (copy) {
+      inspectorCopyLinks(inspectorDownloadUrl(
+        _inspectorState.id, _inspectorState.revision, copy.dataset.downloadPath));
+      return;
+    }
+    const save = event.target.closest("button[data-save-path]");
+    if (save) { inspectorStreamSave(save.dataset.savePath); return; }
+    const resolve = event.target.closest("button[data-resolve-path]");
+    if (resolve) {
+      if (resolve.dataset.resolvedUrl) inspectorCopyLinks(resolve.dataset.resolvedUrl);
+      else inspectorResolveDelivery(resolve.dataset.resolvePath, resolve);
+    }
   });
+  document.getElementById("inspector-cancel-save").addEventListener("click", inspectorCancelFileTransfer);
 
   // Capture before the existing L2 delegated row click, which otherwise expands.
   document.getElementById("main-table").addEventListener("click", event => {
@@ -4243,6 +4771,15 @@ document.querySelector("#main-table").addEventListener("keydown", e => {
   if (!th || (e.key !== "Enter" && e.key !== " ")) return;
   e.preventDefault();
   th.click();
+});
+document.getElementById("main-sort-select").addEventListener("change", event => {
+  const [key, direction] = event.target.value.split("|");
+  const accepted = new Set(["author", "count", "derivativeCount", "totalDownloads",
+    "totalLikes", "latestUpdate", "avgBaseDownloads", "avgBaseLikes"]);
+  if (!accepted.has(key) || (direction !== "asc" && direction !== "desc")) return;
+  RC._state.l1Sort.key = key;
+  RC._state.l1Sort.asc = direction === "asc";
+  RC.requestRender(new Set(RC.expandedSections), false);
 });
 document.getElementById("get-quick-results-btn").addEventListener("click", () => applyFilters(true, false));
 document.getElementById("get-deep-results-btn").addEventListener("click", () => applyFilters(true, true));

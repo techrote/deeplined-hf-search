@@ -26,7 +26,7 @@ function makeInspector(fetchJson) {
 
 test("the complete HTML app still parses as a standalone script", () => {
   assert.doesNotThrow(() => new vm.Script(script[1]));
-  assert.match(html, /const APP_VERSION = '261023\.02'/);
+  assert.match(html, /const APP_VERSION = '261023\.03'/);
 });
 
 test("model identity validation is strict and case-preserving", () => {
@@ -139,4 +139,231 @@ test("both main tables expose Inspect without duplicating lifecycle or external 
   assert.match(script[1], /"main-table"\)\.addEventListener\("click", event =>[\s\S]*?event\.stopPropagation\(\)/);
   assert.match(html, /id="model-inspector"/);
   assert.match(html, /id="inspector-file-rows"/);
+});
+
+
+test("README URL uses the model and a validated revision", () => {
+  const section = script[1].split("// ── Model card README reader ──")[1]
+    .split("async function inspectorFetchModelInfo(modelId) {")[0];
+  const sandbox = { URL, document: {}, fetchText: async () => "",
+    normalizeInspectorModelId: makeInspector().normalizeInspectorModelId };
+  vm.runInNewContext(section +
+    "\nglobalThis.reader = {inspectorReadmeUrl,inspectorSafeMarkdownUrl,inspectorRenderMarkdown};", sandbox);
+  const reader = sandbox.reader;
+  assert.equal(reader.inspectorReadmeUrl("Qwen/Qwen3", "a".repeat(40)),
+    "https://huggingface.co/Qwen/Qwen3/raw/" + "a".repeat(40) + "/README.md");
+  assert.equal(reader.inspectorReadmeUrl("Qwen/Qwen3", "main", "resolve"),
+    "https://huggingface.co/Qwen/Qwen3/resolve/main/README.md");
+  assert.throws(() => reader.inspectorReadmeUrl("Qwen/Qwen3", "../main"));
+  assert.equal(reader.inspectorSafeMarkdownUrl("javascript:alert(1)", "Qwen/Qwen3", "main"), null);
+  assert.equal(reader.inspectorSafeMarkdownUrl("data:text/html,hi", "Qwen/Qwen3", "main"), null);
+});
+
+function fakeDocument() {
+  function element(name) {
+    return {
+      tagName: name.toUpperCase(), children: [], _textContent: "",
+      append(...children) { this.children.push(...children); },
+      replaceChildren(...children) { this.children = [...children]; },
+      set textContent(text) { this._textContent = String(text); this.children = []; },
+      get textContent() { return this._textContent + this.children.map(c => c.textContent || "").join(""); }
+    };
+  }
+  return { createElement: element, createTextNode(text) { const node = element("#text"); node.textContent = text; return node; } };
+}
+
+test("README rendering creates safe local headings, lists and tables", () => {
+  const section = script[1].split("// ── Model card README reader ──")[1]
+    .split("async function inspectorFetchModelInfo(modelId) {")[0];
+  const doc = fakeDocument();
+  const sandbox = { URL, document: doc,
+    normalizeInspectorModelId: makeInspector().normalizeInspectorModelId };
+  vm.runInNewContext(section + "\nglobalThis.renderDoc = inspectorRenderMarkdown;", sandbox);
+  const out = doc.createElement("div");
+  const input = ["---","license: apache-2.0","---","# Example Model",
+    "A **bold** description and [download](https://example.org).",
+    "<script>alert('bad')</script>", "- one", "- two", "",
+    "| Name | Value |", "| --- | --- |", "| Size | 128 |", "",
+    "[unsafe](javascript:alert)", "", "\x60\x60\x60js", "alert('raw text')", "\x60\x60\x60"].join("\n");
+  sandbox.renderDoc(input, out, "Qwen/Qwen3", "main");
+  const flatten = node => [node, ...(node.children || []).flatMap(flatten)];
+  const all = flatten(out);
+  assert.ok(all.some(node => node.tagName === "H1"));
+  assert.ok(all.some(node => node.tagName === "UL"));
+  assert.ok(all.some(node => node.tagName === "TABLE"));
+  assert.ok(all.some(node => node.tagName === "PRE"));
+  assert.ok(all.some(node => node.tagName === "STRONG"));
+  assert.ok(!all.some(node => node.tagName === "SCRIPT"));
+  assert.ok(all.some(node => node.textContent.includes("<script>alert('bad')</script>")));
+  const links = all.filter(node => node.tagName === "A");
+  assert.equal(links.length, 1);
+  assert.equal(links[0].href, "https://example.org/");
+});
+
+test("README uses the same queued transport and enforces a byte limit", async () => {
+  const all = script[1];
+  assert.match(all, /function fetchText\(url\)\s*\{\s*try \{ url = resolveHubApiUrl\(url\); \}/);
+  assert.match(all, /readLimitedTextResponse\(res\)/);
+  assert.match(all, /item\.responseType === "text" \? 0 : CONFIG\.MAX_RETRIES/);
+  const start = all.indexOf("async function readLimitedTextResponse(");
+  const end = all.indexOf("function _scheduleDequeue()", start);
+  assert.ok(start > -1 && end > start);
+  const context = { TextDecoder, Uint8Array, Number };
+  vm.runInNewContext(all.slice(start, end) + "\nglobalThis.read = readLimitedTextResponse;", context);
+  assert.equal(await context.read(new Response("hello"), 1024), "hello");
+  await assert.rejects(context.read(new Response("x".repeat(1025)), 1024), /exceeds/);
+});
+
+test("download controls stream chunks and provide cancellable delivery resolution", () => {
+  assert.match(html, /id="inspector-download-status"/);
+  assert.match(html, /id="inspector-cancel-save"/);
+  assert.match(html, /data-save-path/);
+  assert.match(html, /data-resolve-path/);
+  assert.match(script[1], /await window\.showSaveFilePicker\(/);
+  assert.match(script[1], /await writable\.write\(chunk\.value\)/);
+  assert.match(script[1], /await writable\.abort\(\)/);
+  assert.match(script[1], /method: "HEAD", credentials: "omit", redirect: "follow"/);
+  assert.match(script[1], /dialog\.addEventListener\("close", \(\) => \{ _inspectorSession\+\+; inspectorCancelFileTransfer\(\); \}\)/);
+});
+
+test("L1 sort has derived model counts and latest update from visible models", () => {
+  for (const value of ["derivativeCount|desc", "avgBaseDownloads|desc",
+    "avgBaseLikes|desc", "latestUpdate|desc", "author|asc"]) {
+    assert.ok(html.includes('value="' + value + '"'));
+  }
+  assert.match(html, /data-key="derivativeCount"/);
+  assert.match(html, /data-key="latestUpdate"/);
+  const src = script[1];
+  const begin = src.indexOf("function walkFilterL1(node) {");
+  const end = src.indexOf("\n/**", begin + 1);
+  assert.ok(begin >= 0 && end > begin);
+  const sandbox = { Date, walkFilterL2(node) { return node.r; } };
+  vm.runInNewContext(src.slice(begin, end) + "\nglobalThis.aggregate = walkFilterL1;", sandbox);
+  const l4 = { display: true, modelRef: { lastModified: "2026-10-21T00:00:00Z" } };
+  const l3 = { display: true, aggCount: 1, children: new Map([["q", l4]]) };
+  const visible = { canonical: true, display: true,
+    modelRef: { downloads: 80, likes: 8, lastModified: "2026-10-20T00:00:00Z" },
+    children: new Map([["deriv", l3]]), r: { downloads: 100, likes: 10 } };
+  const hidden = { canonical: true, display: false,
+    modelRef: { downloads: 1000, likes: 100, lastModified: "2026-10-22T00:00:00Z" },
+    children: new Map(), r: { downloads: 0, likes: 0 } };
+  const parent = { children: new Map([["a", visible],["b",hidden]]) };
+  sandbox.aggregate(parent);
+  assert.equal(parent.aggCount, 1);
+  assert.equal(parent.aggDerivativeCount, 1);
+  assert.equal(parent.aggBaseDownloads, 80);
+  assert.equal(parent.aggBaseLikes, 8);
+  assert.equal(parent.aggLatestUpdate, Date.parse("2026-10-21T00:00:00Z"));
+});
+
+
+test("README reader rejects an HTML block page before rendering", async () => {
+  const code = script[1];
+  const start = code.indexOf("async function readLimitedTextResponse(");
+  const end = code.indexOf("function _scheduleDequeue()", start);
+  const context = { TextDecoder, Uint8Array, Number };
+  vm.runInNewContext(code.slice(start, end) + "\nglobalThis.read = readLimitedTextResponse;", context);
+  await assert.rejects(
+    context.read(new Response("<html>Blocked</html>", {
+      headers: { "content-type": "text/html" }
+    })), /Unexpected HTML response/);
+});
+
+function streamingHarness({ failingFetch = false } = {}) {
+  const streamSource = script[1].split("// ── Browser-native file delivery ──")[1]
+    .split("function inspectorMatchingFiles()")[0];
+  assert.ok(streamSource, "Stream implementation missing");
+  const written = [];
+  const writes = { closed: false, aborted: false };
+  const writable = {
+    async write(bytes) { written.push(new Uint8Array(bytes)); },
+    async close() { writes.closed = true; },
+    async abort() { writes.aborted = true; }
+  };
+  const status = { textContent: "" }, cancel = { hidden: true };
+  const pickerCalls = [], fetchCalls = [];
+  const doc = { getElementById(id) {
+    if (id === "inspector-download-status") return status;
+    if (id === "inspector-cancel-save") return cancel;
+    throw new Error("Unexpected DOM element " + id);
+  }};
+  const ctx = {
+    URL, Date, AbortController, setTimeout, clearTimeout,
+    document: doc,
+    window: { async showSaveFilePicker(options) {
+      pickerCalls.push(options);
+      return { async createWritable() { return writable; } };
+    }},
+    _inspectorState: {
+      id: "Demo/Public-Model",
+      revision: "a".repeat(40),
+      files: [{ path: "assets/example.gguf", size: 4 }]
+    },
+    _inspectorSession: 1,
+    validInspectorFilePath: makeInspector().validInspectorFilePath,
+    inspectorDownloadUrl: makeInspector().inspectorDownloadUrl,
+    inspectorFileSizeLabel: makeInspector().inspectorFileSizeLabel,
+    fetch: async (url, init) => {
+      fetchCalls.push({ url, init });
+      if (failingFetch) throw new TypeError("Failed to fetch");
+      return new Response(new Uint8Array([1, 2, 3, 4]));
+    }
+  };
+  vm.runInNewContext(streamSource +
+    "\nglobalThis.downloadApi = {inspectorStreamSave,inspectorResolveDelivery,inspectorCancelFileTransfer};", ctx);
+  return { api: ctx.downloadApi, written, writes, status, cancel, pickerCalls, fetchCalls, ctx };
+}
+
+test("streamed save asks user for a destination and writes file chunks directly", async () => {
+  const h = streamingHarness();
+  await h.api.inspectorStreamSave("assets/example.gguf");
+  assert.equal(h.pickerCalls.length, 1);
+  assert.equal(h.pickerCalls[0].suggestedName, "example.gguf");
+  assert.equal(h.fetchCalls.length, 1);
+  assert.equal(h.fetchCalls[0].init.method, "GET");
+  assert.equal(h.fetchCalls[0].init.credentials, "omit");
+  assert.equal(h.fetchCalls[0].init.redirect, "follow");
+  assert.equal(h.fetchCalls[0].url,
+    "https://huggingface.co/Demo/Public-Model/resolve/" +
+    "a".repeat(40) + "/assets/example.gguf?download=true");
+  assert.deepEqual(Array.from(h.written[0]), [1, 2, 3, 4]);
+  assert.equal(h.writes.closed, true);
+  assert.equal(h.writes.aborted, false);
+  assert.equal(h.cancel.hidden, true);
+  assert.match(h.status.textContent, /Saved example\.gguf/);
+});
+
+test("stream failure is reported without claiming the download was saved", async () => {
+  const h = streamingHarness({ failingFetch: true });
+  await h.api.inspectorStreamSave("assets/example.gguf");
+  assert.equal(h.writes.closed, false);
+  assert.equal(h.cancel.hidden, true);
+  assert.match(h.status.textContent, /Browser streaming failed: Failed to fetch/);
+  assert.doesNotMatch(h.status.textContent, /Saved example\.gguf/);
+});
+
+test("a successful HEAD request offers a temporary resolved HTTPS address", async () => {
+  const h = streamingHarness();
+  const target = "https://cdn-lfs-us-1.hf.co/signed?token=example";
+  h.ctx.fetch = async (url, init) => {
+    h.fetchCalls.push({ url, init });
+    return { ok: true, url: target };
+  };
+  const links = [];
+  const parent = {
+    querySelector() { return null; },
+    append(el) { links.push(el); }
+  };
+  h.ctx.document.createElement = () => ({ dataset: {}, textContent: "" });
+  const button = { disabled: false, isConnected: true, parentElement: parent,
+    dataset: {}, textContent: "Resolve delivery URL" };
+  await h.api.inspectorResolveDelivery("assets/example.gguf", button);
+  assert.equal(h.fetchCalls[0].init.method, "HEAD");
+  assert.equal(h.fetchCalls[0].init.credentials, "omit");
+  assert.equal(h.fetchCalls[0].init.redirect, "follow");
+  assert.equal(links.length, 1);
+  assert.equal(links[0].href, target);
+  assert.equal(button.dataset.resolvedUrl, target);
+  assert.equal(button.disabled, false);
+  assert.match(h.status.textContent, /temporary URL may expire/);
 });
