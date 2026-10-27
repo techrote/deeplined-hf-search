@@ -158,9 +158,17 @@ No real model has <1M or >2T params. The regex already has a negative lookbehind
 
 ## UI Design
 
-### Dark Theme Is Fixed
+### Colour themes
 
-No light/dark toggle is planned. Hardcoded color values are intentional for consistency. CSS variableization would add complexity without benefit for a single-theme app.
+Existing colour values are CSS custom properties, including inline colours in generated content. Dark preserves the original palette; Light, Midnight blue, and Forest override the same tokens, so badges, sliders, tables and popups change together. The theme selector persists an allowlisted key in `deeplined-hf-theme`; storage errors fall back to Dark on load without breaking the app. Native controls use the palette's `color-scheme`. The preference does not fetch data or change filters.
+
+### Structured benchmark metrics
+
+`normalizeModel` retains a compact `benchmarks` array extracted from API/card `model-index` and `eval_results` metadata. Search results use the same extractor. Non-finite/non-numeric scores are ignored, zero is preserved, duplicate representations are deduplicated, and publisher text/source URLs are escaped. Only HTTP(S) source links are enabled. No arbitrary README tables are parsed and no derivative inherits a base model's evaluation.
+
+Comparison keys use stable serialized evaluation descriptors: format, dataset config/split/revision/arguments, task, metric config/arguments/name/type, source, and notes. Values and verification tokens/flags are excluded from the key. Different values for the same model/context are treated as unavailable for sorting, not resolved by choosing the largest. Original score units/scales are preserved.
+
+The global metric selector is populated from loaded models (capped at 1,000 contexts). Model-level tables have a benchmark column; author aggregates deliberately do not average unrelated scores. `sortRows` computes the selected score dynamically and keeps missing/conflicting scores last in both directions. L4 projections retain benchmarks. Changing the selected metric schedules the normal render coordinator and refreshes the independent search table; fetching still uses supported Hub sort fields. Clear Cache clears benchmark choices and search rows. Table layouts allow horizontal scrolling rather than squeezing seven columns into narrow screens.
 
 ### Native Button Elements
 

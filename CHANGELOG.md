@@ -1,5 +1,13 @@
 # Changelog — Streamlined HF Model Search
 
+### v261027.01 — Reported benchmark metrics and colour themes
+
+- Added structured model-card evaluation scores to search, base-model, and individual quantization tables, with expandable context and safe source links.
+- Added a shared benchmark metric selector and numerical ascending/descending sorting; missing/conflicting values remain last, and distinct evaluation contexts remain separate.
+- Preserved raw scales and explicit missing-data states; no overall score or inherited quantization scores are fabricated.
+- Added saved Dark, Light, Midnight blue, and Forest palettes across the interface, with storage-failure fallback and native control colour schemes.
+- Added benchmark/theme regressions alongside the existing search and tree checks.
+
 ### v261023.03 — Automatic candidate discovery and simpler search controls
 
 - Standard name searches now derive a candidate hint from required literal text: `npc` and `*npc*` fetch relevant Hub candidates before full matching.

@@ -2,6 +2,20 @@
 
 ## Deeplined advanced search
 
+## Benchmarks and colour themes
+
+Use **Colour theme** at the top to choose Dark, Light, Midnight blue, or Forest. The choice is saved in local browser storage; if storage is unavailable, themes still work for the current page session.
+
+Structured evaluation scores appear in search results and in the base-model and individual quantization tables. Load models, select a dataset/metric in **Benchmark metric**, then click **Benchmark score** to sort high-to-low or low-to-high. Search sorting applies to the fetched sample, not a global Hub ranking. Expand any score to inspect all reported evaluations and their context/source links. Without a selected metric, each cell shows its count of reported scores.
+
+The app reads numeric scores from `model-index` metadata and `eval_results` metadata when present in API responses. Model cards without these fields display a dash; arbitrary benchmark tables in README prose and external leaderboards are not scraped. For a model with structured metadata, try `distilbert-base-uncased-finetuned-sst-2-english` in the name search.
+
+Only the selected evaluation context is sorted. Missing or conflicting values stay last in both directions. Dataset split/config/revision, metric configuration/arguments, task, and reported source are kept separate. Raw values retain their original scale; scores are not averaged, converted into an overall ranking, or inherited by derivatives. Publisher-supplied scores have not been independently verified, and even similarly labelled evaluations may use different setups. Use ascending order for metrics such as error rate or loss, where lower is better.
+
+Run `node tests/benchmarks-themes-test.cjs` for benchmark parsing, numeric sorting, escaped context, and saved-theme checks.
+
+## Search usage
+
 Open `streamlined-hf-model-search.html` in a modern browser. The **Advanced search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata). Standard advanced syntax is the default; enable **Use regular expressions** for regex inputs and flags.
 
 1. Enter a name query, a card query, or both. When both are provided, a model must match both. For example, name `+Qwen +7B -GPTQ *GGUF` and card `+"tool calling" -experimental`.
