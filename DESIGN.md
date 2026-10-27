@@ -158,9 +158,17 @@ No real model has <1M or >2T params. The regex already has a negative lookbehind
 
 ## UI Design
 
-### Dark Theme Is Fixed
+### Colour themes
 
-No light/dark toggle is planned. Hardcoded color values are intentional for consistency. CSS variableization would add complexity without benefit for a single-theme app.
+Existing colour values are CSS custom properties, including inline colours in generated content. Dark preserves the original palette; Light, Midnight blue, and Forest override the same tokens, so badges, sliders, tables and popups change together. The theme selector persists an allowlisted key in `deeplined-hf-theme`; storage errors fall back to Dark on load without breaking the app. Native controls use the palette's `color-scheme`. The preference does not fetch data or change filters.
+
+### Structured benchmark metrics
+
+`normalizeModel` retains a compact `benchmarks` array extracted from API/card `model-index` and `eval_results` metadata. Search results use the same extractor. Non-finite/non-numeric scores are ignored, zero is preserved, duplicate representations are deduplicated, and publisher text/source URLs are escaped. Only HTTP(S) source links are enabled. No arbitrary README tables are parsed and no derivative inherits a base model's evaluation.
+
+Comparison keys use stable serialized evaluation descriptors: format, dataset config/split/revision/arguments, task, metric config/arguments/name/type, source, and notes. Values and verification tokens/flags are excluded from the key. Different values for the same model/context are treated as unavailable for sorting, not resolved by choosing the largest. Original score units/scales are preserved.
+
+The global metric selector is populated from loaded models (capped at 1,000 contexts). Model-level tables have a benchmark column; author aggregates deliberately do not average unrelated scores. `sortRows` computes the selected score dynamically and keeps missing/conflicting scores last in both directions. L4 projections retain benchmarks. Changing the selected metric schedules the normal render coordinator and refreshes the independent search table; fetching still uses supported Hub sort fields. Clear Cache clears benchmark choices and search rows. Table layouts allow horizontal scrolling rather than squeezing seven columns into narrow screens.
 
 ### Native Button Elements
 
@@ -181,6 +189,28 @@ Filter bar containers carry a `chip-group` class; selector rules use `.chip-grou
 ---
 
 ## Filter Architecture
+
+### Optional Open LLM Leaderboard v2 import
+
+The user-initiated importer reads the official `open-llm-leaderboard/contents` dataset's default/train export in pages of 100 through the shared fetch queue. It uses `/rows` rather than `/filter`, whose cold index can be unavailable. A typed `leaderboard` response adds the CORS-exposed X-Revision header alongside parsed JSON. Every page must expose the same 40-hex revision, stable total, sequential row indices, supported schema, and untruncated cells. Exports are bounded to 10,000 rows and published atomically only after the full scan. Failure, Stop, and generation changes cannot publish partial data. The old table remains untouched until commit.
+
+The compact session cache stores only exact IDs, evaluation provenance/settings, and an allowlist of numeric score columns; the dataset's HTML Model column is never rendered. Flagged/invalid rows are excluded. A bounded lazy score cache derives source-qualified benchmark entries by model ID. Comparison keys include dataset revision, v2 metric, precision, weight type and chat-template setting; evaluated model SHA/run/submission details are shown in the per-model context, not used to prevent cross-model comparison. Raw and normalized metrics have distinct keys. Conflicting evaluations remain unavailable via the existing benchmarkValue rule. The published Average is imported as its own named metric, not recomputed.
+
+No fuzzy IDs, base-model inheritance, current-revision equivalence, or persistent leaderboard storage is implied. Clear Cache stops the importer and clears both caches. UI statuses identify the historical source and coverage limits; future model loads can reuse imported data without new API requests.
+
+### Independent bounded advanced discovery
+
+The advanced search panel uses a separate results table and a bounded, Hub-sorted candidate query (1–500 models). It does not alter the tree or inherit its filters. Name and raw README queries are ANDed, and name matching runs before card retrieval. Standard name queries automatically seed Hub discovery from the longest literal name fragment (at least two characters) in a required term. Parsing retains literal segments, splitting at wildcard gaps and excluding negative terms; name-like Unicode letters, numbers, underscores and hyphens can form a seed. Thus `*npc*` retrieves candidates using `search=npc` before applying the exact wildcard query, rather than filtering unrelated popular models. Regex syntax is never inferred as a literal seed. Card terms are never used as name seeds, to avoid excluding models that mention a term only in their cards.
+
+Sampling controls are in a collapsed native details element. Its optional manual name hint overrides auto discovery; candidate sort and limit retain their existing behavior. Worker initialization returns the seed after successful query validation, avoiding duplicate main-thread parsing. No viable positive name seed means a broad sample (card-only, negative-only, wildcard-only, or regex-only), explicitly described in fetching and completion statuses. Completion names the automatic/manual seed, preserves sampled-coverage warnings, and gives actionable guidance for zero matches.
+
+Standard syntax is the default; an unchecked checkbox switches both fields to regex mode and reveals flags. Switching modes preserves input text without attempting translation. Hidden regex flags are disabled and ignored in standard mode. `parseAdvancedQuery` tokenizes optional leading +/-, double-quoted phrases, backslash escapes, and wildcards. Each standard term compiles to a separate Unicode, case-insensitive regex; all positive terms must match and all negative terms must be absent. Literal characters are regex-escaped. `?` consumes one Unicode character; `*` consumes any number, including newlines. `*{n}`, `*{min,max}`, and `*{min,}` support bounded/unbounded lengths with explicit bounds capped at 10,000. Quoted phrases retain literal spacing while allowing explicit wildcards. Malformed syntax fails during worker initialization before any network request. Negative-only queries are valid and get an explanatory preview.
+
+`fetchResource` shares the existing queue for JSON and text responses, with typed deduplication keys. The API request and byte counters include README fetches. Cards are cached by resolve URL, using the candidate SHA when available; the cache is FIFO-bounded at 200 entries and cleared with Clear Cache. Raw cards above 1 MB are skipped and counted. Cards are plain text and match previews are escaped before insertion.
+
+A dedicated Web Worker compiles both queries and processes one string at a time, with 300 ms per match and 3 seconds for initialization. The standard parser is serialized alongside the worker function to retain the single-file, dependency-free design. Timeout terminates the worker. Regex mode accepts only non-stateful `imsu` flags. Runs capture `_fetchGeneration` plus their own identity, checking both after every await; stop terminates the worker and prevents additional requests and stale result/cache writes. An already-started network request can finish. Explorer generation changes invalidate the scan; Clear Cache explicitly stops it. Ordinary text-filter and slider changes remain independent.
+
+No main-thread regex fallback is used when workers are unavailable, because that would reintroduce unbounded UI stalls. Queue promise cleanup uses paired fulfillment/rejection handlers so handled HTTP failures do not leave an unhandled promise from `finally`.
 
 Two-tier update pipeline:
 
@@ -283,3 +313,7 @@ See docs/api-model-inspector.md for full contracts and acceptance checks.
   respecting existing date, task, quantization and text filters.
 - Sorting remains local, deterministic, and is mediated by RenderCoordinator
   to preserve its expansion/rerender lifecycle.
+
+Leaderboard imports contact datasets-server.huggingface.co directly even when the optional model-metadata gateway is selected; the gateway allowlist is not expanded. README scans now share master's bounded plain-text reader. Theme tokens also cover the integrated API connection and model-inspector controls.
+
+Leaderboard pages are paced at one per second in addition to shared queue throttling. Queue items retain their retry count and original generation across backoff; retries cannot reset indefinitely or revive stale source requests.

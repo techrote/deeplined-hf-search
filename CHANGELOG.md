@@ -1,5 +1,41 @@
 # Changelog — Streamlined HF Model Search
 
+### v261027.02 — Open LLM Leaderboard v2 scores
+
+- Added optional progress/cancellation-controlled import of the official historical v2 table, cached for the page session.
+- Added source-labelled published Average, individual normalized benchmarks, and raw variants; keeps evaluation settings/scales separate and matches exact repository IDs only.
+- Validates one dataset revision across all pages and publishes scores atomically. Excludes flagged/invalid rows and reports failures without hiding card scores.
+- Added tests for pagination, identity, provenance, conflicts, caching, cancellation, schema/revision errors and retries; a full live import verified the published data.
+
+### v261027.01 — Reported benchmark metrics and colour themes
+
+- Added structured model-card evaluation scores to search, base-model, and individual quantization tables, with expandable context and safe source links.
+- Added a shared benchmark metric selector and numerical ascending/descending sorting; missing/conflicting values remain last, and distinct evaluation contexts remain separate.
+- Preserved raw scales and explicit missing-data states; no overall score or inherited quantization scores are fabricated.
+- Added saved Dark, Light, Midnight blue, and Forest palettes across the interface, with storage-failure fallback and native control colour schemes.
+- Added benchmark/theme regressions alongside the existing search and tree checks.
+
+### v261023.03 — Automatic candidate discovery and simpler search controls
+
+- Standard name searches now derive a candidate hint from required literal text: `npc` and `*npc*` fetch relevant Hub candidates before full matching.
+- Moved manual hint, candidate sort, and sample limit into collapsed Advanced options.
+- Added automatic/manual/broad scope messages and guidance for empty samples. Excluded terms, card-only text, and regex syntax never become automatic name hints.
+- Added regression coverage for seed extraction, hint overrides, broad-sample fallbacks, and collapsed controls.
+
+### v261023.02 — Default advanced syntax with optional regex mode
+
+- Made standard advanced search the default, with required (+ or unprefixed) terms, excluded (-) terms, quoted phrases, backslash escapes, single-character (?) and variable-length (*) wildcards.
+- Added explicit wildcard lengths: *{n}, *{min,max}, and *{min,}; validates ranges and incomplete queries before requests.
+- Added a regex checkbox that changes both inputs and reveals regex flags; flags are hidden, disabled, and ignored in standard mode. Search text is preserved when switching modes.
+- Kept worker timeouts, card caching, sampled coverage, and cancellation for both modes; expanded tests to cover advanced parsing, Unicode wildcards, literal regex punctuation, negative-only queries, malformed syntax, and mode controls.
+
+### v261023.01 — Regex search for model names and cards
+
+- Added independent regex discovery with optional candidate name query, Hub sort, and a 1–500 model limit; clearly labels sampled coverage and independence from explorer filters.
+- Supports ANDed name/README patterns, `imsu` flags, progress, cancellation, escaped match previews, and counts for unavailable or oversized cards.
+- Runs regex compilation/matching in a disposable worker with a timeout; invalid patterns do not trigger candidate requests.
+- Extended the shared rate-limited queue to read raw cards, added a revision-keyed bounded card cache, and guarded asynchronous results against stopped or stale runs.
+- Added regression tests covering worker timeouts, matching semantics, card failures, caching, cancellation, generation changes, and typed queue cleanup.
 ### v261023.03 — README panel, browser save and richer sorts
 
 - Added bounded README.md loading through the selected API transport and
@@ -31,6 +67,7 @@
 - Added a separately deployable, read-only model metadata gateway with
   bounded bodies, route and query validation, CORS configuration and caching.
 - Added Node regression coverage and optional gateway documentation.
+
 
 
 ### v260603.01 — Two-phase orphan promotion: fall back to L2 when parent not in tree
@@ -502,3 +539,10 @@ Replaced three `_allFetched.find()` hot paths with a global `_allFetchedById` Ma
 ### v260530.09 — Initial Release
 
 Single-file, zero-dependency HuggingFace model explorer with 4-level expandable hierarchy (Author → Base Model → Quant Author → Quant). Key capabilities: progressive rendering during fetch and param deepening, queue-based API rate limiting (4 req/s), LRU-cached author/child data, piecewise-linear param slider, hidden-models preview popups with sortable columns, generation-guarded async to prevent stale renders, and batched param resolution with parent inheritance.
+
+### Integration with current master
+
+- Preserved API Connection, safe model/README inspection, streamed file saves, and expanded author sorting while resolving feature-branch conflicts.
+- Applied colour tokens to the newer controls and added search, benchmark/theme and leaderboard tests to the existing CI workflow.
+
+- Fixed retry counts resetting on queue reentry, added stale-backoff rejection, and paced leaderboard pages at one per second after live rate-limit testing.

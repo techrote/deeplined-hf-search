@@ -1,5 +1,58 @@
 # A Streamlined Hugging Face Model Search
 
+## Deeplined advanced search
+
+## Benchmarks and colour themes
+
+Use **Colour theme** at the top to choose Dark, Light, Midnight blue, or Forest. The choice is saved in local browser storage; if storage is unavailable, themes still work for the current page session.
+
+Structured evaluation scores appear in search results and in the base-model and individual quantization tables. Load models, select a dataset/metric in **Benchmark metric**, then click **Benchmark score** to sort high-to-low or low-to-high. Search sorting applies to the fetched sample, not a global Hub ranking. Expand any score to inspect all reported evaluations and their context/source links. Without a selected metric, each cell shows its count of reported scores.
+
+The app reads numeric scores from `model-index` metadata and `eval_results` metadata when present in API responses. Model cards without these fields display a dash until a separate source supplies a score; arbitrary benchmark tables in README prose are not scraped. For a model with structured metadata, try `distilbert-base-uncased-finetuned-sst-2-english` in the name search.
+
+Only the selected evaluation context is sorted. Missing or conflicting values stay last in both directions. Dataset split/config/revision, metric configuration/arguments, task, and reported source are kept separate. Raw values retain their original scale; scores are not averaged, converted into an overall ranking, or inherited by derivatives. Publisher-supplied scores have not been independently verified, and even similarly labelled evaluations may use different setups. Use ascending order for metrics such as error rate or loss, where lower is better.
+
+Use **Load Open LLM Leaderboard scores** to import the official historical v2 table from `open-llm-leaderboard/contents`. The dataset currently has 4,576 rows and its published snapshot is from March 2025, so newer models may not appear. Import is optional, uses the shared rate-limited queue, reports progress, and can be stopped. The table is cached for this page session, including for models loaded later; Clear Cache removes it.
+
+The import adds published Average, IFEval, BBH, MATH Lvl 5, GPQA, MUSR, and MMLU-PRO scores, plus separate raw metric variants. Select an **Open LLM v2** metric in the same benchmark dropdown to sort. Card and leaderboard sources remain separate; raw and normalized scales are not mixed. Precision, weight type, and chat-template settings remain distinct. Conflicting runs for the same context stay unavailable rather than selecting the highest score.
+
+Only exact, case-sensitive repository IDs match; a quantization or fine-tune does not receive its parent's score. Flagged or invalid rows are excluded. Expanded scores include the evaluated model SHA, submission/run details, and dataset revision; a historical evaluated revision may differ from the model's current revision. All pages must have the same browser-visible dataset revision header before any imported scores are published. Partial, changed, or failed imports apply no new scores and can be retried. No model weights are downloaded.
+
+Run `node tests/benchmarks-themes-test.cjs` and `node tests/leaderboard-test.cjs` for score, theme, and import regression checks. The optional `LIVE_LEADERBOARD=1 node tests/leaderboard-test.cjs` performs the full network import and checks a known published score.
+
+## Search usage
+
+Open `streamlined-hf-model-search.html` in a modern browser. The **Advanced search** panel searches full `author/model` IDs and raw `README.md` model cards (including YAML metadata). Standard advanced syntax is the default; enable **Use regular expressions** for regex inputs and flags.
+
+1. Enter a name query, a card query, or both. When both are provided, a model must match both. For example, name `+Qwen +7B -GPTQ *GGUF` and card `+"tool calling" -experimental`.
+2. Click **Search**. Required literal text in a standard name query automatically retrieves relevant Hub candidates: `npc` and `*npc*` both retrieve NPC candidates first, then apply the complete query. Results appear in candidate order with plain-text match previews. **Stop search** retains partial results and stops scheduling new requests.
+3. If needed, expand **Advanced options** to override the automatic name hint, change candidate sort, or adjust the 1–500 candidate limit. These controls are collapsed by default.
+
+Standard search matches case-insensitively anywhere in the text. All terms are ANDed, whether or not they have a `+` prefix. This is Google-style syntax, not Google's ranking or query-expansion behavior:
+
+| Syntax | Meaning |
+| --- | --- |
+| `qwen gguf` or `+qwen +gguf` | Require both terms, in any order |
+| `-gptq` or `-"experimental model"` | Exclude a term or phrase |
+| `"tool calling"` | Match the adjacent phrase, including its literal spacing |
+| `Qwen*GGUF` | Match zero or more characters between Qwen and GGUF, including spaces/newlines |
+| `Qwen?` | Match Qwen followed by exactly one character |
+| `a*{2,5}b` | Match a, then 2–5 characters, then b |
+| `a*{3}b` / `a*{2,}b` | Match exactly 3 / at least 2 intervening characters |
+| `\*`, `\?`, `\"`, `\\` | Match literal operators, quotes, or backslashes |
+
+Wildcard bounds must be ordered nonnegative integers up to 10,000. Quotes may contain wildcards. Other regex punctuation is literal in standard mode; unmatched quotes, incomplete escapes, and malformed ranges produce errors before fetching candidates. A query consisting only of exclusions is supported.
+
+For regex mode, toggle **Use regular expressions** and enter patterns without `/delimiters/`, e.g. name `Qwen.*(7B|8B).*GGUF$` and card `tool[ -]?calling|function calling`. Choose `i`, `m`, `s`, and/or `u` flags. Flags are hidden and ignored in standard mode. Toggling modes preserves the input text; it does not translate between query languages.
+
+This scans a bounded candidate sample, **not all cards on the Hub**. Automatic discovery picks the longest alphanumeric/name fragment of at least two characters from required name terms; wildcard gaps and excluded terms cannot become hints. The complete query still filters the returned candidates, including any fuzzy Hub results. The status reports whether discovery was automatic, manually overridden, or a broad sample.
+
+Card-only, negative-only, wildcard-only, and regex searches without a manual name hint scan top models in the selected sort order and explicitly report that broad scope. Card text is never inferred as a name hint: doing so would exclude models that mention a term only in their cards. A manual hint overrides automatic discovery and searches names only. The explorer's date, parameter, and quantization filters below are independent of this search panel.
+
+Card scans use one additional request per name-matching candidate, through the existing shared rate limiter. Successful cards are cached by revision (up to 200); **Clear Cache** clears them. Missing, gated, or otherwise unreadable cards and cards over 1 MB are counted as skipped, not searched. Readme content is never rendered as HTML. Both search modes run in a disposable Web Worker with a 300 ms matching timeout so expensive expressions cannot freeze the UI.
+
+Run regression checks with `node tests/regex-search-test.cjs`.
+
 A dark-color themed, browser-based, 4-level hierarchical explorer for HuggingFace base models and their quantizations.
 
 **Key Features:**

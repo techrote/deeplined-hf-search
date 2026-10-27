@@ -26,7 +26,7 @@ function makeInspector(fetchJson) {
 
 test("the complete HTML app still parses as a standalone script", () => {
   assert.doesNotThrow(() => new vm.Script(script[1]));
-  assert.match(html, /const APP_VERSION = '261023\.03'/);
+  assert.match(html, /const APP_VERSION = '\d{6}\.\d+'/);
 });
 
 test("model identity validation is strict and case-preserving", () => {

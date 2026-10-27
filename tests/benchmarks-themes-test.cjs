@@ -1,0 +1,78 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const html = fs.readFileSync(path.join(__dirname, '..', 'streamlined-hf-model-search.html'), 'utf8');
+const source = html.match(/<script\b[^>]*>([\s\S]*?)<\/script>/)[1];
+const elements = new Map();
+const storage = new Map();
+function element(id) {
+  if (!elements.has(id)) elements.set(id, { value:'', innerHTML:'', dataset:{}, style:{}, addEventListener(){}, classList:{add(){},remove(){}} });
+  return elements.get(id);
+}
+const document = { readyState:'loading', documentElement:{dataset:{}}, addEventListener(){}, getElementById:element, querySelector:element };
+const localStorage = {getItem:key=>storage.get(key), setItem:(key,value)=>storage.set(key,value)};
+const context = vm.createContext({console, document, localStorage, window:{}, setTimeout, clearTimeout});
+const expose = `globalThis.api = {extractBenchmarks, normalizeModel, benchmarkCell, benchmarkValue, sortRows, setTheme, initAppearanceAndBenchmarks,
+  choose:key=>{_benchmarkKey=key;}, catalog:_benchmarkCatalog};`;
+vm.runInContext(source.replace(/\}\)\(\);\s*$/, expose+'\n})();'),context);
+const api = context.api;
+const legacy = (value, dataset={type:'mmlu',name:'MMLU',split:'test'}) => ({cardData:{'model-index':[{results:[{task:{type:'text-generation'},dataset,metrics:[{type:'accuracy',value}],source:{name:'Evaluation',url:'https://example.org/results'}}]}]}});
+const a = api.extractBenchmarks(legacy(0));
+assert.equal(a.length,1);
+assert.equal(a[0].value,0);
+const index = legacy(0).cardData['model-index'];
+assert.equal(api.extractBenchmarks({'model-index':index}).length,1);
+assert.equal(api.extractBenchmarks({'model-index':index,cardData:{'model-index':index}}).length,1);
+assert.match(a[0].label,/MMLU.*accuracy/);
+for (const value of [null,undefined,NaN,Infinity,true,'', '70%']) assert.equal(api.extractBenchmarks(legacy(value)).length,0);
+assert.equal(api.extractBenchmarks({cardData:{'model-index':[null,{results:[null,{metrics:[null]}]}]}}).length,0);
+const b = api.extractBenchmarks(legacy(85,{split:'test',name:'MMLU',type:'mmlu'}));
+assert.equal(a[0].key,b[0].key);
+const other = api.extractBenchmarks(legacy(95,{type:'mmlu',name:'MMLU',split:'validation'}));
+assert.notEqual(a[0].key,other[0].key);
+const differentSetup = legacy(85);
+differentSetup.cardData['model-index'][0].results[0].dataset.args = {few_shot:5};
+assert.notEqual(a[0].key,api.extractBenchmarks(differentSetup)[0].key);
+const modern = api.extractBenchmarks({cardData:{eval_results:[{dataset:{id:'cais/hle',task_id:'hle'},value:12.4,notes:'no tools'}]}});
+assert.equal(modern.length,1);
+assert.match(modern[0].label,/cais\/hle/);
+api.choose(a[0].key);
+const rows=[{id:'missing',benchmarks:[]},{id:'zero',benchmarks:a},{id:'high',benchmarks:b},{id:'different',benchmarks:other}];
+assert.equal(api.sortRows(rows,'benchmarkScore',false).map(x=>x.id).join(','),'high,zero,different,missing');
+assert.equal(api.sortRows(rows,'benchmarkScore',true).map(x=>x.id).join(','),'zero,high,different,missing');
+assert.equal(api.benchmarkValue({benchmarks:[...a,...b]}),null);
+assert.equal(api.benchmarkValue({benchmarks:[...b,...b]}),85);
+const normalized=api.normalizeModel({id:'Org/Model',...legacy(85)});
+assert.equal(normalized.benchmarks.length,1);
+assert.equal(normalized.cardData['model-index'],undefined);
+const bad=api.extractBenchmarks(legacy(3,{type:'evil',name:'<img src=x onerror=alert(1)>'}));
+const output=api.benchmarkCell({benchmarks:bad});
+assert(output.includes('&lt;img'));
+assert(!output.includes('<img'));
+bad[0].sourceURL='javascript:alert(1)';
+assert(!api.benchmarkCell({benchmarks:bad}).includes('href="javascript:'));
+assert.match(api.benchmarkCell({benchmarks:[]}),/No structured evaluation/);
+console.log('PASS: legacy/modern scores, zero values, missing/conflicting values, contextual keys, normalization, escaped details and numeric sort');
+
+for(const theme of ['dark','light','midnight','forest']) {
+  api.setTheme(theme);
+  assert.equal(document.documentElement.dataset.theme,theme);
+  assert.equal(element('theme-select').value,theme);
+  assert.equal(storage.get('deeplined-hf-theme'),theme);
+}
+api.setTheme('invalid');
+assert.equal(document.documentElement.dataset.theme,'dark');
+storage.set('deeplined-hf-theme','forest');
+api.initAppearanceAndBenchmarks();
+assert.equal(document.documentElement.dataset.theme,'forest');
+localStorage.getItem=()=>{throw new Error('Storage denied');};
+localStorage.setItem=()=>{throw new Error('Storage denied');};
+api.initAppearanceAndBenchmarks();
+api.setTheme('light');
+assert.equal(document.documentElement.dataset.theme,'light');
+const definitions=new Set([...html.matchAll(/--(c-[\da-f]+):/g)].map(x=>x[1]));
+for(const [,variable] of html.matchAll(/var\(--(c-[\da-f]+)\)/g)) assert(definitions.has(variable),variable);
+for(const theme of ['light','midnight','forest']) assert(html.includes(`:root[data-theme="${theme}"]`));
+console.log('PASS: theme validation, saved selection, blocked storage fallback, and complete colour variable definitions');
+console.log('All benchmark and theme tests passed.');

@@ -19,3 +19,6 @@ jobs:
       - run: node --test tests/network-transport-test.cjs tests/gateway-test.mjs
       - run: node --test tests/model-inspector-test.cjs
       - run: node tests/phase5-test.js
+      - run: node tests/regex-search-test.cjs
+      - run: node tests/benchmarks-themes-test.cjs
+      - run: node tests/leaderboard-test.cjs
