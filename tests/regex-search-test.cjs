@@ -42,7 +42,7 @@ const calls = [];
 const unhandled = [];
 process.on('unhandledRejection', error => unhandled.push(error));
 const context = vm.createContext({
-  console, setTimeout, clearTimeout, TextEncoder, AbortController, URLSearchParams,
+  console, setTimeout, clearTimeout, TextEncoder, TextDecoder, AbortController, URLSearchParams,
   document: {
     readyState: 'loading',
     addEventListener() {},
@@ -76,7 +76,8 @@ function setup(values = {}) {
   for (const [id, value] of Object.entries(values)) element(`regex-${id}`).value = value;
 }
 function response(data, status = 200) {
-  return { ok: status === 200, status, headers: { get() { return null; } }, text: async () => typeof data === 'string' ? data : JSON.stringify(data) };
+  const text = typeof data === 'string' ? data : JSON.stringify(data);
+  return { ok: status === 200, status, headers: { get() { return null; } }, text: async () => text, arrayBuffer: async () => new TextEncoder().encode(text).buffer };
 }
 const run = () => api.runRegexSearch({ preventDefault() {} });
 const status = () => element('regex-search-status').textContent;

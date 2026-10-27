@@ -14,16 +14,16 @@ const revision = '9c09a7cae43334062a82cb164f2ef255013dafa2';
 const features = ['fullname','Precision','Flagged','IFEval','MMLU-PRO'].map(name=>({name}));
 let handler, calls=[];
 const live = process.env.LIVE_LEADERBOARD === '1';
-const context = vm.createContext({console,TextEncoder,URLSearchParams,AbortController,setTimeout,clearTimeout,requestAnimationFrame:()=>1,
+const context = vm.createContext({console,TextEncoder,URL,URLSearchParams,AbortController,setTimeout,clearTimeout,requestAnimationFrame:()=>1,
   document:{readyState:'loading',addEventListener(){},getElementById:element,querySelector:selector=>element(selector==='#regex-results tbody'?'tbody':selector),createElement:()=>element(Math.random())},window:{},
   fetch:async url=>{calls.push(url);return live?fetch(url):handler(url);}
 });
 const expose=`globalThis.api={loadLeaderboard,stopLeaderboardImport,compactLeaderboardRow,leaderboardBenchmarks,benchmarkValue,benchmarkCell,sortRows,normalizeModel,CONFIG,
-  rows:_leaderboardRows, results:_searchResults, choose:key=>{_benchmarkKey=key;}, revision:()=>_leaderboardRevision,
+  rows:_leaderboardRows, results:_searchResults, choose:key=>{_benchmarkKey=key;}, revision:()=>_leaderboardRevision, gateway:()=>{_transportMode='gateway';_gatewayOrigin='https://gateway.example';},
   bump:()=>{_fetchGeneration++;},clear:()=>{_leaderboardRows.clear();_leaderboardScoreCache.clear();_leaderboardRevision='';}};`;
 vm.runInContext(source.replace(/\}\)\(\);\s*$/,expose+'\n})();'),context);
 const api=context.api;
-if(!live){api.CONFIG.RATE_WINDOW=1;api.CONFIG.MAX_RETRIES=0;}
+if(!live){api.CONFIG.RATE_WINDOW=1;api.CONFIG.MAX_RETRIES=0;api.CONFIG.LEADERBOARD_PAGE_DELAY=0;}
 function row(id='Org/Plain',value=20,precision='bfloat16') {return {fullname:id,Precision:precision,'Weight type':'Original','Chat Template':true,'Model sha':'a'.repeat(40),eval_name:id+'_evaluation',Flagged:false,'Average ⬆️':value,IFEval:0,'IFEval Raw':0,'MMLU-PRO':30};}
 function page(rows,offset=0,total=rows.length,rev=revision,overrides={}) {return {ok:true,status:200,headers:{get:key=>key==='X-Revision'?rev:null},text:async()=>JSON.stringify({features,partial:false,num_rows_total:total,rows:rows.map((row,i)=>({row_idx:offset+i,row,truncated_cells:[]})),...overrides})};}
 function status(){return element('leaderboard-status').textContent;}
@@ -51,8 +51,9 @@ function reset(){api.clear();calls=[];api.results.length=0;}
   console.log('PASS: allowlisted numeric scores; flagged, malformed and HTML-only identities excluded');
 
   reset();
+  api.gateway();
   api.results.push({model:{id:'Org/Plain',benchmarks:[]},snippet:''});
-  handler=url=>new URL(url).searchParams.get('offset')==='0'?page([row()],0,2):page([row('Org/Other',40)],1,2);
+  handler=url=>{assert.equal(new URL(url).origin,'https://datasets-server.huggingface.co');return new URL(url).searchParams.get('offset')==='0'?page([row()],0,2):page([row('Org/Other',40)],1,2);};
   await api.loadLeaderboard();
   assert.equal(api.rows.size,2);
   assert.equal(api.revision(),revision);
@@ -100,5 +101,16 @@ function reset(){api.clear();calls=[];api.results.length=0;}
   await api.loadLeaderboard();assert.equal(api.rows.size,0);assert.match(status(),/failed:/);
   handler=()=>page([row()]);await api.loadLeaderboard();assert.equal(api.rows.size,1);
   console.log('PASS: stop, generation changes, network failure and successful retry');
+  reset();api.CONFIG.MAX_RETRIES=2;
+  handler=()=>({ok:false,status:429,headers:{get:key=>key==='Retry-After'?'0':null}});
+  await api.loadLeaderboard();
+  assert.equal(calls.length,3);
+  assert.equal(api.rows.size,0);
+  assert.match(status(),/HTTP 429/);
+  reset();let inBackoff;
+  handler=()=>{inBackoff=true;return {ok:false,status:429,headers:{get:key=>key==='Retry-After'?'1':null}};};
+  const old=api.loadLeaderboard();await until(()=>inBackoff);api.bump();await old;
+  assert.equal(calls.length,1);
+  console.log('PASS: retry counts survive requeue and stale backoff items never issue new requests');
   console.log('All leaderboard tests passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

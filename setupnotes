@@ -1,0 +1,7 @@
+fetch("https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/raw/main/README.md")
+  .then(async response => {
+    console.log("HTTP status:", response.status);
+    console.log("Success:", response.ok);
+    console.log("Content:", (await response.text()).slice(0, 300));
+  })
+  .catch(error => console.error("FAILED:", error));

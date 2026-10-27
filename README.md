@@ -8,7 +8,7 @@ Use **Colour theme** at the top to choose Dark, Light, Midnight blue, or Forest.
 
 Structured evaluation scores appear in search results and in the base-model and individual quantization tables. Load models, select a dataset/metric in **Benchmark metric**, then click **Benchmark score** to sort high-to-low or low-to-high. Search sorting applies to the fetched sample, not a global Hub ranking. Expand any score to inspect all reported evaluations and their context/source links. Without a selected metric, each cell shows its count of reported scores.
 
-The app reads numeric scores from `model-index` metadata and `eval_results` metadata when present in API responses. Model cards without these fields display a dash; arbitrary benchmark tables in README prose and external leaderboards are not scraped. For a model with structured metadata, try `distilbert-base-uncased-finetuned-sst-2-english` in the name search.
+The app reads numeric scores from `model-index` metadata and `eval_results` metadata when present in API responses. Model cards without these fields display a dash until a separate source supplies a score; arbitrary benchmark tables in README prose are not scraped. For a model with structured metadata, try `distilbert-base-uncased-finetuned-sst-2-english` in the name search.
 
 Only the selected evaluation context is sorted. Missing or conflicting values stay last in both directions. Dataset split/config/revision, metric configuration/arguments, task, and reported source are kept separate. Raw values retain their original scale; scores are not averaged, converted into an overall ranking, or inherited by derivatives. Publisher-supplied scores have not been independently verified, and even similarly labelled evaluations may use different setups. Use ascending order for metrics such as error rate or loss, where lower is better.
 
@@ -66,6 +66,43 @@ A dark-color themed, browser-based, 4-level hierarchical explorer for HuggingFac
 
 ![Hugging Face Search](./search.png "Example Search")
 
+
+## Configurable model-metadata backend
+
+Deeplined can query the Hugging Face API directly (the default), or use an
+optional, self-hosted read-only metadata gateway. Open **API Connection**,
+enter your HTTPS gateway origin, click **Apply**, then **Test connection**.
+The original standalone HTML workflow remains unchanged in direct mode.
+
+See [metadata transport](docs/metadata-transport.md) for the interface and
+[gateway setup](gateway/README.md) for an example Cloudflare Worker.
+
+## API-first model inspection and download links
+
+Deeplined can inspect a model directly from Hub API metadata without opening
+its model webpage. Click **Inspect** beside any base model or derivative, or
+enter a full owner/model-name in the model inspector field. The viewer shows
+model details, structured model-card metadata, available repository files and
+direct download URLs. It can copy individual links or a filtered set of links.
+
+File URLs are pinned to the model revision SHA whenever available. Discovery
+still works in browsers where the model webpage is inaccessible, although
+API access may differ by browser or by endpoint. If individual model details
+fail, exact-match search results provide a partial fallback; no missing
+filenames are guessed. The inspector now displays the full README.md in a safe, locally rendered
+panel (plus raw Markdown), when that endpoint is accessible. The structured
+model API remains useful if README retrieval fails.
+
+The file list includes **Open URL**, **Save (stream)** and **Resolve delivery
+URL** options alongside **Copy link**. Browser streaming saves large files
+incrementally where the File System Access API and file-source CORS permit it;
+there is no promise that an inaccessible source URL can be fetched.
+
+The main author list has additional sorting for latest model update, matching
+derivative counts and average base-model downloads/likes, with ascending and
+descending choices.
+
+See [API inspector design and usage](docs/api-model-inspector.md).
 
 ## Feature specifics
 

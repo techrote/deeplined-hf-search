@@ -36,6 +36,39 @@
 - Runs regex compilation/matching in a disposable worker with a timeout; invalid patterns do not trigger candidate requests.
 - Extended the shared rate-limited queue to read raw cards, added a revision-keyed bounded card cache, and guarded asynchronous results against stopped or stale runs.
 - Added regression tests covering worker timeouts, matching semantics, card failures, caching, cancellation, generation changes, and typed queue cleanup.
+### v261023.03 — README panel, browser save and richer sorts
+
+- Added bounded README.md loading through the selected API transport and
+  safe local Markdown rendering with a raw-text view.
+- Added browser-native streamed file save and optional HEAD-based delivery URL
+  inspection alongside the original file links; errors remain visible.
+- Added latest-update, derivative-count and per-base popularity sorting on
+  the main author search results, with direction choices and column sorting.
+- Expanded regression coverage for Markdown safety, file delivery, request
+  bounds and author aggregations.
+
+
+### v261023.02 — API model inspection and direct file links
+
+- Added a locally rendered model detail dialog and exact model-ID lookup,
+  reachable from both base-model and derivative rows.
+- Added read-only API inspection, partial search-list fallback, repository
+  file manifests, optional tree sizes, filename/weight filtering and
+  version-pinned direct download URLs with copy controls.
+- Added validation and regression tests for model identity, file paths,
+  revision pinning, API fallback and UI integration.
+- Kept search, browsing and file downloads separate; no backend is required.
+
+
+### v261023.01 — Configurable metadata transport
+
+- Added a Direct/Gateway selector, gateway URL validation, connectivity check,
+  and persistent browser preference without changing the standalone default.
+- Added a separately deployable, read-only model metadata gateway with
+  bounded bodies, route and query validation, CORS configuration and caching.
+- Added Node regression coverage and optional gateway documentation.
+
+
 
 ### v260603.01 — Two-phase orphan promotion: fall back to L2 when parent not in tree
 
@@ -506,3 +539,10 @@ Replaced three `_allFetched.find()` hot paths with a global `_allFetchedById` Ma
 ### v260530.09 — Initial Release
 
 Single-file, zero-dependency HuggingFace model explorer with 4-level expandable hierarchy (Author → Base Model → Quant Author → Quant). Key capabilities: progressive rendering during fetch and param deepening, queue-based API rate limiting (4 req/s), LRU-cached author/child data, piecewise-linear param slider, hidden-models preview popups with sortable columns, generation-guarded async to prevent stale renders, and batched param resolution with parent inheritance.
+
+### Integration with current master
+
+- Preserved API Connection, safe model/README inspection, streamed file saves, and expanded author sorting while resolving feature-branch conflicts.
+- Applied colour tokens to the newer controls and added search, benchmark/theme and leaderboard tests to the existing CI workflow.
+
+- Fixed retry counts resetting on queue reentry, added stale-backoff rejection, and paced leaderboard pages at one per second after live rate-limit testing.

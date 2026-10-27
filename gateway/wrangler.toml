@@ -1,0 +1,10 @@
+name = "deeplined-hf-metadata"
+main = "src/worker.mjs"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Optional: exact comma-separated allowed browser origins.
+# A blank value exposes read-only metadata to all origins; configure abuse controls
+# for any public deployment. file:// browser pages typically send Origin: null.
+[vars]
+ALLOWED_ORIGINS = ""

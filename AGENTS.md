@@ -25,6 +25,58 @@ Read `DESIGN.md` before making changes that touch: popup behavior, CONFIG values
 - **No structural renders from resolution paths**: `tryResolveModelParam`, `deepenBatch`, and the inline derive loop update state/caches only, queue progressive badge updates via `UI.queueUpdate()`, and schedule structural renders via `_schedulePostDeepenRender` only when filter boundaries are crossed.
 - **`refreshAllExpanded(force, allowAsync = true, authorFilter = null)`**: The `allowAsync` parameter distinguishes structural-pass re-renders (`false`, no deepening) from user-triggered refreshes (`true`, deepens via `refreshAuthorL2Section`). When `authorFilter` is set, only that author's subtree is re-expanded via O(1) Map lookup, avoiding a full scan.
 
+## Optional API transport
+
+The HTML application must keep direct model discovery as the default.
+Optional gateway routing belongs in resolveHubApiUrl, called by fetchJson
+before queueing and deduplication. The source switch must clear old results,
+abort in-flight requests, and preserve existing generation checks.
+
+gateway/src/worker.mjs is a narrowly scoped metadata service. Keep the
+upstream fixed and routes read-only; refuse arbitrary URLs, weight files
+and redirects. Update the gateway tests whenever an endpoint is added.
+
+Run node --test tests/network-transport-test.cjs tests/gateway-test.mjs
+when changing transport behaviour. The overall design is described in
+docs/metadata-transport.md.
+
+## API-first model inspector
+
+The inspector is an on-demand feature. Keep normalizeModel lean and preserve
+the existing search tree and event delegation. Retrieve model detail through
+fetchJson so the selected API transport and rate limiter remain authoritative.
+Only construct download URLs from validated model IDs, repository filenames
+and an API-qualified SHA (falling back to a clearly labelled main revision).
+
+Never render model-card API text as unsanitized HTML. Avoid dependencies and
+keep the standalone HTML application functional without auxiliary services.
+Use a capture-phase handler for Inspect buttons so table-row expansion is not
+triggered. Preserve stale-request protection when changing API sources.
+
+See docs/api-model-inspector.md for design and:
+node --test tests/model-inspector-test.cjs for focused coverage.
+
+## README, streaming file save and author sorting
+
+README is untrusted Markdown. Render with safe DOM construction only;
+never insert raw model-card content into innerHTML. Keep fetchText on the
+existing queued transport and enforce the bounded plain-text response limit.
+A failed README request must not hide structured metadata or file links.
+
+File download links must originate from validated repository paths and
+revisions. The optional browser stream path must be explicitly user-initiated,
+use an incremental reader/writer instead of buffering large weight files,
+support cancellation, and report network and CORS failures accurately.
+No system-level network changes or unaudited file hosts.
+
+The expanded L1 sorts must derive from visible and canonical tree data.
+Do not change existing aggregate downloads/likes semantics; compute new
+derivative/average/latest metrics separately. New sort choices must stay
+in sync with header arrows and RenderCoordinator.
+
+Focused tests: node --test tests/model-inspector-test.cjs.
+See docs/api-model-inspector.md for feature limits.
+
 ## Testing
 
 Open in browser, validate:

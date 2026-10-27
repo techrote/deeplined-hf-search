@@ -490,6 +490,82 @@
   .detail-inner table { min-width:1000px; }
   button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline:2px solid var(--c-58a6ff); outline-offset:2px; }
   :root[data-theme="light"] .action-btn { color:white; }
+
+  #api-connection { margin: 10px 0; border: 1px solid var(--c-30363d); border-radius: 7px; background: var(--c-161b22); padding: 8px 12px; }
+  #api-connection summary { cursor: pointer; color: var(--c-79c0ff); font-size: 0.82rem; font-weight: 600; }
+  #api-connection summary:focus-visible { outline: 2px solid var(--c-58a6ff); }
+  .api-connection-controls { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; margin: 10px 0 3px; font-size: 0.8rem; }
+  .api-connection-controls select, .api-connection-controls input {
+    background: var(--c-0d1117); color: var(--c-c9d1d9); border: 1px solid var(--c-30363d); border-radius: 5px; padding: 6px 8px; font: inherit;
+  }
+  .api-connection-controls input { min-width: 245px; flex: 1; }
+  .api-connection-controls input:disabled { opacity: 0.5; }
+  .api-connection-controls button { background: var(--c-21262d); color: var(--c-c9d1d9); border: 1px solid var(--c-30363d); border-radius: 5px; padding: 6px 10px; cursor: pointer; }
+  .api-connection-controls button:focus-visible, .api-connection-controls select:focus-visible,
+  .api-connection-controls input:focus-visible { outline: 2px solid var(--c-58a6ff); }
+  #api-connection-status { font-size: 0.74rem; color: var(--c-8b949e); min-height: 1em; margin-top: 5px; }
+
+  #inspect-lookup { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:var(--c-161b22); border:1px solid var(--c-30363d); border-radius:7px; padding:9px 12px; margin:10px 0; font-size:0.8rem; }
+  #inspect-lookup label { color:var(--c-c9d1d9); font-weight:600; }
+  #inspect-lookup input { flex:1; min-width:180px; background:var(--c-0d1117); color:var(--c-e6edf3); border:1px solid var(--c-30363d); border-radius:5px; padding:7px; font:inherit; }
+  #inspect-lookup button, .model-inspect-btn { border:1px solid var(--c-484f58); background:var(--c-30363d); border-radius:5px; color:var(--c-c9d1d9); padding:4px 8px; font:inherit; font-size:0.73rem; cursor:pointer; }
+  #inspect-lookup button:focus-visible, .model-inspect-btn:focus-visible { outline:2px solid var(--c-58a6ff); outline-offset:2px; }
+  .model-inspect-btn { margin-left:7px; vertical-align:middle; }
+  #inspect-lookup-result { color:var(--c-e3b341); font-size:0.75rem; }
+  #model-inspector { width:min(1020px,96vw); max-width:96vw; max-height:92vh; margin:auto; border:1px solid var(--c-484f58); border-radius:9px; padding:0; color:var(--c-c9d1d9); background:var(--c-0d1117); }
+  #model-inspector::backdrop { background:rgba(0,0,0,0.78); }
+  #model-inspector .inspect-head { position:sticky; top:0; z-index:3; background:var(--c-161b22); border-bottom:1px solid var(--c-30363d); padding:13px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  #model-inspector .inspect-head h2 { font-size:1.08rem; color:var(--c-e6edf3); overflow-wrap:anywhere; }
+  #model-inspector .inspect-content { padding:15px; }
+  #model-inspector button { font:inherit; cursor:pointer; border:1px solid var(--c-484f58); border-radius:5px; padding:5px 9px; background:var(--c-30363d); color:var(--c-e6edf3); }
+  #model-inspector button:focus-visible, #model-inspector a:focus-visible, #model-inspector input:focus-visible, #model-inspector textarea:focus-visible { outline:2px solid var(--c-58a6ff); outline-offset:2px; }
+  #model-inspector .inspect-status { color:var(--c-c9d1d9); margin:6px 0 12px; font-size:0.82rem; }
+  #model-inspector .inspect-facts { display:grid; grid-template-columns:minmax(110px,160px) 1fr; gap:7px 14px; margin:10px 0 16px; font-size:0.83rem; }
+  #model-inspector .inspect-facts dt { color:var(--c-8b949e); font-weight:600; }
+  #model-inspector .inspect-facts dd { margin:0; overflow-wrap:anywhere; }
+  #model-inspector h3 { font-size:0.97rem; color:var(--c-e6edf3); margin:16px 0 8px; }
+  #model-inspector details { border:1px solid var(--c-30363d); border-radius:6px; padding:9px; margin:8px 0; }
+  #model-inspector summary { cursor:pointer; font-weight:600; color:var(--c-c9d1d9); }
+  #model-inspector pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:0.75rem; max-height:250px; overflow:auto; margin-top:10px; }
+  #model-inspector .inspect-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:9px 0; font-size:0.8rem; }
+  #model-inspector .inspect-controls input[type="search"] { min-width:150px; flex:1; background:var(--c-0d1117); border:1px solid var(--c-30363d); border-radius:5px; color:var(--c-e6edf3); padding:7px; }
+  #model-inspector .inspect-file-scroll { max-height:40vh; overflow:auto; border:1px solid var(--c-30363d); border-radius:6px; }
+  #model-inspector .inspect-file-table { border-collapse:collapse; width:100%; font-size:0.8rem; }
+  #model-inspector .inspect-file-table th { position:sticky; top:0; background:var(--c-161b22); color:var(--c-e6edf3); text-align:left; padding:8px; border-bottom:1px solid var(--c-30363d); }
+  #model-inspector .inspect-file-table td { padding:7px 8px; border-bottom:1px solid var(--c-21262d); overflow-wrap:anywhere; }
+  #model-inspector .inspect-file-table td:nth-child(2) { text-align:right; white-space:nowrap; }
+  #model-inspector .inspect-file-table td:last-child { white-space:nowrap; }
+  #model-inspector .inspect-file-table a { color:var(--c-79c0ff); margin-right:5px; }
+  #model-inspector .inspect-file-note { color:var(--c-c9d1d9); font-size:0.78rem; margin:7px 0; }
+  #model-inspector #inspector-link-fallback { margin-top:8px; width:100%; min-height:55px; background:var(--c-0d1117); color:var(--c-e6edf3); border:1px solid var(--c-484f58); border-radius:5px; padding:8px; }
+  @media (max-width:600px) { #model-inspector .inspect-facts { grid-template-columns:1fr; gap:3px; } #model-inspector .inspect-file-table td:last-child { white-space:normal; } }
+  #main-sort-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0; padding:8px 10px; border:1px solid var(--c-30363d); border-radius:6px; background:var(--c-161b22); font-size:0.8rem; }
+  #main-sort-toolbar label { color:var(--c-c9d1d9); font-weight:600; }
+  #main-sort-toolbar select { padding:6px 8px; color:var(--c-e6edf3); border:1px solid var(--c-30363d); border-radius:5px; background:var(--c-0d1117); }
+  #main-sort-toolbar select:focus-visible { outline:2px solid var(--c-58a6ff); }
+  .main-sort-description { color:var(--c-8b949e); font-size:0.73rem; }
+
+  #model-inspector .inspect-markdown { font-size:0.85rem; line-height:1.5; margin:12px 4px; overflow-wrap:anywhere; }
+  #model-inspector .inspect-markdown h1, #model-inspector .inspect-markdown h2,
+  #model-inspector .inspect-markdown h3, #model-inspector .inspect-markdown h4 {
+    margin:16px 0 6px; color:var(--c-e6edf3); line-height:1.25;
+  }
+  #model-inspector .inspect-markdown h1 { font-size:1.3rem; }
+  #model-inspector .inspect-markdown h2 { font-size:1.15rem; }
+  #model-inspector .inspect-markdown h3 { font-size:1.04rem; }
+  #model-inspector .inspect-markdown p { margin:8px 0; }
+  #model-inspector .inspect-markdown ul, #model-inspector .inspect-markdown ol { padding-left:23px; margin:8px 0; }
+  #model-inspector .inspect-markdown li { margin:3px 0; }
+  #model-inspector .inspect-markdown pre { background:var(--c-161b22); border:1px solid var(--c-30363d); border-radius:5px; padding:10px; overflow:auto; max-height:none; font-size:0.79rem; }
+  #model-inspector .inspect-markdown code { background:var(--c-21262d); padding:1px 4px; border-radius:3px; }
+  #model-inspector .inspect-markdown blockquote { border-left:3px solid var(--c-6e7681); padding:3px 12px; color:var(--c-c9d1d9); }
+  #model-inspector .inspect-markdown a { color:var(--c-79c0ff); }
+  #model-inspector .inspect-markdown table { display:block; overflow-x:auto; border-collapse:collapse; width:max-content; max-width:100%; }
+  #model-inspector .inspect-markdown th, #model-inspector .inspect-markdown td { border:1px solid var(--c-30363d); padding:5px 9px; text-align:left; }
+  #model-inspector .inspect-markdown hr { border:0; border-top:1px solid var(--c-30363d); margin:12px 0; }
+  #model-inspector #inspector-download-status { padding:6px 0; }
+  #model-inspector .inspect-file-table button { margin:2px 3px 2px 0; font-size:0.75rem; }
+
 </style>
 </head>
 <body>
@@ -534,6 +610,21 @@
   <div id="regex-results-wrap"><table id="regex-results" hidden><caption>Search matches; benchmark sorting applies within the fetched sample</caption><thead><tr><th scope="col">Model</th><th scope="col">Downloads</th><th scope="col">Likes</th><th scope="col"><button type="button" id="benchmark-search-sort">Benchmark score ↕</button></th><th scope="col">Matching text</th></tr></thead><tbody></tbody></table></div>
 </section>
 <div id="status-bar"><div id="status" aria-live="polite">Fetching models…</div><span id="version"></span></div>
+<details id="api-connection">
+  <summary>API Connection — Direct by default; optional metadata gateway</summary>
+  <div class="api-connection-controls">
+    <label for="api-transport-mode">Source</label>
+    <select id="api-transport-mode" aria-label="API transport">
+      <option value="direct">Direct Hugging Face</option>
+      <option value="gateway">HTTPS metadata gateway</option>
+    </select>
+    <label for="api-gateway-url">Gateway origin</label>
+    <input type="url" id="api-gateway-url" placeholder="https://your-gateway.example" autocomplete="url" spellcheck="false" aria-label="Gateway HTTPS origin">
+    <button type="button" id="api-transport-apply">Apply</button>
+    <button type="button" id="api-transport-test">Test connection</button>
+  </div>
+  <div id="api-connection-status" role="status" aria-live="polite">Direct Hugging Face API selected.</div>
+</details>
 <div id="date-slider">
   <h2 class="ds-title">Date Range</h2>
   <div class="ds-track-wrap" role="group" aria-label="Date range filter">
@@ -615,19 +706,84 @@
   <span class="fiw"><input type="text" id="l4-model-filter" placeholder="Any quant model" title="Filters individual quant models within already-expanded L3 sections." autocomplete="off"><button type="button" class="fic" data-for="l4-model-filter" aria-label="Clear">✕</button></span>
 </div>
 <div id="scope-notice">Top 500 by downloads + top 500 by recent updates per pipeline tag, plus 1000 trending models — broader coverage of popular and recently active models. Older or niche models may not appear; use <a href="https://huggingface.co/models" target="_blank" rel="noopener noreferrer" aria-label="Hugging Face Search (opens in new tab)">HF Search</a> for full coverage.</div>
+
+<section id="inspect-lookup" aria-label="Inspect a specific model">
+  <label for="inspect-model-id">Inspect model by ID</label>
+  <input id="inspect-model-id" type="text" placeholder="owner/model-name" autocomplete="off" spellcheck="false">
+  <button id="inspect-model-go" type="button">Inspect</button>
+  <span id="inspect-lookup-result" role="status" aria-live="polite"></span>
+</section>
+<div id="main-sort-toolbar" role="group" aria-label="Author results sorting">
+  <label for="main-sort-select">Sort authors by</label>
+  <select id="main-sort-select">
+    <option value="totalDownloads|desc">Total downloads — most</option>
+    <option value="totalDownloads|asc">Total downloads — fewest</option>
+    <option value="totalLikes|desc">Total likes — most</option>
+    <option value="totalLikes|asc">Total likes — fewest</option>
+    <option value="count|desc">Base models — most</option>
+    <option value="count|asc">Base models — fewest</option>
+    <option value="derivativeCount|desc">Matching derivatives — most</option>
+    <option value="derivativeCount|asc">Matching derivatives — fewest</option>
+    <option value="latestUpdate|desc">Latest model update — newest</option>
+    <option value="latestUpdate|asc">Latest model update — oldest</option>
+    <option value="avgBaseDownloads|desc">Average base downloads — highest</option>
+    <option value="avgBaseDownloads|asc">Average base downloads — lowest</option>
+    <option value="avgBaseLikes|desc">Average base likes — highest</option>
+    <option value="avgBaseLikes|asc">Average base likes — lowest</option>
+    <option value="author|asc">Author A–Z</option>
+    <option value="author|desc">Author Z–A</option>
+  </select>
+  <span class="main-sort-description">Table headings also sort. Results reflect active filters.</span>
+</div>
 <table id="main-table" aria-label="Authors and base model counts">
   <thead>
     <tr>
       <th data-key="author" scope="col" tabindex="0">Base Model Authors<span class="arrow"></span></th>
       <th data-key="count" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Base Models</th>
+      <th data-key="derivativeCount" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Derivatives</th>
       <th data-key="totalDownloads" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Total Downloads</th>
       <th data-key="totalLikes" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Total Likes</th>
+      <th data-key="latestUpdate" class="right" scope="col" tabindex="0"><span class="sort-arrow"></span>Latest Update</th>
     </tr>
   </thead>
   <tbody id="body"></tbody>
 </table>
 <div id="count"></div>
 </main>
+<dialog id="model-inspector" aria-labelledby="inspector-title">
+  <div class="inspect-head"><h2 id="inspector-title">Model inspector</h2><button id="inspector-close" type="button">Close</button></div>
+  <div class="inspect-content">
+    <p id="inspector-status" class="inspect-status" role="status" aria-live="polite"></p>
+    <div id="inspector-details"></div>
+    <details id="inspector-readme-panel" open>
+      <summary>README.md — model card</summary>
+      <p id="inspector-readme-status" class="inspect-file-note" role="status" aria-live="polite">Select a model to load its README.</p>
+      <div id="inspector-readme-content" class="inspect-markdown"></div>
+      <details id="inspector-readme-raw-panel" hidden>
+        <summary>View raw Markdown</summary>
+        <pre id="inspector-readme-raw"></pre>
+      </details>
+    </details>
+    <section id="inspector-file-section" hidden aria-label="Repository files and download links">
+      <h3>Repository files and direct download links</h3>
+      <p id="inspector-file-revision" class="inspect-file-note"></p>
+      <div class="inspect-controls">
+        <label for="inspector-file-filter">Filename</label>
+        <input id="inspector-file-filter" type="search" placeholder="Filter filenames" autocomplete="off">
+        <label><input id="inspector-weights-only" type="checkbox"> Weights only</label>
+        <button id="inspector-copy-matching" type="button">Copy matching links</button>
+      </div>
+      <p id="inspector-file-notice" class="inspect-file-note" role="status"></p>
+      <p id="inspector-download-status" class="inspect-file-note" role="status" aria-live="polite">File links are versioned when a revision SHA is available.</p>
+      <button id="inspector-cancel-save" type="button" hidden>Cancel current download</button>
+      <div class="inspect-file-scroll">
+        <table class="inspect-file-table"><thead><tr><th scope="col">File</th><th scope="col">Size</th><th scope="col">Actions</th></tr></thead><tbody id="inspector-file-rows"></tbody></table>
+      </div>
+      <textarea id="inspector-link-fallback" hidden readonly aria-label="Select and copy download links"></textarea>
+    </section>
+  </div>
+</dialog>
+
 
 <script defer>
 (function() {
@@ -639,6 +795,7 @@
 
 // ── App Version ──
 const APP_VERSION = '261027.02';
+
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -737,6 +894,7 @@ const CONFIG = {
   RATE_WINDOW: 250,// at up to 8 req/s with no 429s; 4 req/s is a safe long-term rate.
   FETCH_TIMEOUT: 60000,
   MAX_RETRIES: 3,
+  LEADERBOARD_PAGE_DELAY: 1000,
   DATE_SLIDER_MAX: 80,
   DAYS_PER_STEP: 14,
   DERIVED_BATCH_SIZE: 6,
@@ -755,6 +913,115 @@ const CONFIG = {
   POPUP_HIDE_DELAY: 200,   // ms debounce before popup disappears (same as DEBOUNCE_MS)
   POPUP_MAX_SAMPLES_L4: 200,  // L4 hidden models preview cap; L2 shows all with no cap
 };
+
+// ── API Transport ──
+// Optional origin-only metadata gateway. The default preserves direct single-file use.
+const TRANSPORT_STORAGE_KEY = "deeplined-hf-transport-v1";
+let _transportMode = "direct";
+let _gatewayOrigin = "";
+
+function normalizeGatewayOrigin(value) {
+  if (typeof value !== "string" || !value.trim()) throw new Error("Enter a gateway HTTPS origin.");
+  let u;
+  try { u = new URL(value.trim()); }
+  catch { throw new Error("Enter a valid gateway URL."); }
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(u.hostname);
+  if (u.protocol !== "https:" && !(u.protocol === "http:" && loopback)) {
+    throw new Error("Gateway must use HTTPS (HTTP is only allowed on loopback).");
+  }
+  if (u.username || u.password || u.search || u.hash || (u.pathname !== "/" && u.pathname !== "")) {
+    throw new Error("Use a gateway origin only, without credentials, path, query or fragment.");
+  }
+  return u.origin;
+}
+
+function resolveHubApiUrl(hubUrl) {
+  if (_transportMode !== "gateway") return hubUrl;
+  if (!_gatewayOrigin) throw new Error("A gateway endpoint is required.");
+  const url = new URL(hubUrl);
+  if (url.origin !== "https://huggingface.co") return hubUrl;
+  if (url.username || url.password) throw new Error("Embedded URL credentials are not supported.");
+  return _gatewayOrigin + url.pathname + url.search;
+}
+
+function readTransportPreference() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TRANSPORT_STORAGE_KEY) || "null");
+    if (saved && saved.mode === "gateway" && saved.origin) {
+      return { mode: "gateway", origin: normalizeGatewayOrigin(saved.origin) };
+    }
+  } catch { /* Browser storage may be unavailable for local files. */ }
+  return { mode: "direct", origin: "" };
+}
+
+function setupApiConnectionControls() {
+  const selector = document.getElementById("api-transport-mode");
+  const address = document.getElementById("api-gateway-url");
+  const output = document.getElementById("api-connection-status");
+  const testButton = document.getElementById("api-transport-test");
+  const saved = readTransportPreference();
+  _transportMode = saved.mode;
+  _gatewayOrigin = saved.origin;
+  selector.value = saved.mode;
+  address.value = saved.origin;
+  function updateFields() { address.disabled = selector.value !== "gateway"; }
+  selector.addEventListener("change", updateFields);
+  updateFields();
+  output.textContent = saved.mode === "gateway" ? "Saved gateway selected." : "Direct Hugging Face API selected.";
+
+  document.getElementById("api-transport-apply").addEventListener("click", () => {
+    try {
+      const mode = selector.value;
+      const origin = mode === "gateway" ? normalizeGatewayOrigin(address.value) : "";
+      const changed = mode !== _transportMode || origin !== _gatewayOrigin;
+      _transportMode = mode;
+      _gatewayOrigin = origin;
+      try { localStorage.setItem(TRANSPORT_STORAGE_KEY, JSON.stringify({ mode, origin })); }
+      catch { /* Nonpersistent operation remains available. */ }
+      if (changed) {
+        resetAppState();
+        recomputeAndRender();
+        markDirty();
+        UI.setStatus("API source updated. Fetch results to query the selected source.");
+      }
+      output.textContent = (mode === "gateway" ? "Gateway selected: " + origin : "Direct API selected.") +
+        " No browser network settings are changed.";
+    } catch (error) {
+      output.textContent = error.message;
+    }
+  });
+
+  testButton.addEventListener("click", async () => {
+    const controller = new AbortController();
+    let timeout;
+    try {
+      const mode = selector.value;
+      const endpoint = mode === "gateway" ?
+        normalizeGatewayOrigin(address.value) + "/health" :
+        "https://huggingface.co/api/models?limit=1";
+      testButton.disabled = true;
+      output.textContent = "Checking API connectivity...";
+      timeout = setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(endpoint, {
+        signal: controller.signal, cache: "no-store", headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const result = await response.json();
+      if (mode === "gateway" && (!result || result.status !== "ok")) {
+        throw new Error("Gateway health response was not recognised.");
+      }
+      if (mode === "direct" && !Array.isArray(result)) {
+        throw new Error("Unexpected Hub API response.");
+      }
+      output.textContent = "Connection successful. Click Apply to select this source.";
+    } catch (error) {
+      output.textContent = "Connection failed: " + error.message;
+    } finally {
+      clearTimeout(timeout);
+      testButton.disabled = false;
+    }
+  });
+}
 
 // ── Expansion Key Prefixes ──
 // Expansion key prefixes — used for stable identification across re-renders.
@@ -921,7 +1188,11 @@ const RenderCoordinator = {
             id: author,
             count: l1Node.aggCount,
             totalDownloads: l1Node.aggDownloads,
-            totalLikes: l1Node.aggLikes
+            totalLikes: l1Node.aggLikes,
+            derivativeCount: l1Node.aggDerivativeCount || 0,
+            avgBaseDownloads: l1Node.aggCount ? l1Node.aggBaseDownloads / l1Node.aggCount : 0,
+            avgBaseLikes: l1Node.aggCount ? l1Node.aggBaseLikes / l1Node.aggCount : 0,
+            latestUpdate: l1Node.aggLatestUpdate || 0
           });
         }
       }
@@ -1291,6 +1562,11 @@ function resetAppState() {
   _searchResults.length = 0;
   updateBenchmarkOptions();
   renderSearchResults();
+  inspectorCancelFileTransfer();
+  _inspectorSession++;
+  const inspector = document.getElementById("model-inspector");
+  if (inspector && inspector.open) inspector.close();
+
   _fetchGeneration++;
   fetchedTasks.clear();
   fetchedUntagged = false;
@@ -1337,22 +1613,75 @@ let _uiRafId = null;
 
 // ── Queue-based API Request Manager ──
 //   fetchJson → _scheduleDequeue → _dequeueNext → _dispatchFetchWithRetry
-function fetchJson(url) { return fetchResource(url, 'json'); }
-function fetchText(url) { return fetchResource(url, 'text'); }
 function fetchResource(url, responseType) {
-  const key = `${responseType}:${url}`;
+  try { url = resolveHubApiUrl(url); }
+  catch (error) { return Promise.reject(error); }
+  return fetchQueuedResource(url, responseType);
+}
+function fetchJson(url) {
+  try { url = resolveHubApiUrl(url); }
+  catch (error) { return Promise.reject(error); }
+  return fetchQueuedResource(url, "json");
+}
+
+function fetchText(url) {
+  try { url = resolveHubApiUrl(url); }
+  catch (error) { return Promise.reject(error); }
+  return fetchQueuedResource(url, "text");
+}
+
+function fetchQueuedResource(url, responseType) {
+  const key = responseType === "json" ? url : responseType + ":" + url;
+
   const existing = _inflightFetches.get(key);
   if (existing) return existing;
 
   let resolve, reject;
   const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
-  _workQueue.push({ url, responseType, resolve, reject });
+  _workQueue.push({ url, key, responseType, resolve, reject, generation: _fetchGeneration, retries: 0 });
   _scheduleDequeue();
 
   _inflightFetches.set(key, promise);
-  const cleanup = () => { if (_inflightFetches.get(key) === promise) _inflightFetches.delete(key); };
-  promise.then(cleanup, cleanup);
+  const forget = () => {
+    if (_inflightFetches.get(key) === promise) _inflightFetches.delete(key);
+  };
+  promise.then(forget, forget);
+
   return promise;
+}
+
+// Bound untrusted README responses before decoding or rendering them. The
+// queue retains cancellation, rate limiting and selected API transport.
+async function readLimitedTextResponse(response, limit = 1024 * 1024) {
+  const contentType = response.headers.get("content-type") || "";
+  if (/text\/html/i.test(contentType)) throw new Error("Unexpected HTML response instead of Markdown");
+  const advertised = Number(response.headers.get("content-length"));
+  if (Number.isFinite(advertised) && advertised > limit) {
+    throw new Error("README exceeds the 1 MiB display limit");
+  }
+  if (!response.body || !response.body.getReader) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.byteLength > limit) throw new Error("README exceeds the 1 MiB display limit");
+    return new TextDecoder().decode(bytes);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0, value = "";
+  try {
+    while (true) {
+      const next = await reader.read();
+      if (next.done) break;
+      size += next.value.byteLength;
+      if (size > limit) throw new Error("README exceeds the 1 MiB display limit");
+      value += decoder.decode(next.value, { stream: true });
+    }
+    return value + decoder.decode();
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function _scheduleDequeue() {
@@ -1390,7 +1719,7 @@ function _dequeueNext() {
   _apiTimestamps.push(Date.now());
   _inflightCount++;
 
-  _dispatchFetchWithRetry(item, _fetchGeneration, 0);
+  _dispatchFetchWithRetry(item, item.generation ?? _fetchGeneration, item.retries || 0);
 }
 
 // Executes the HTTP fetch with retry logic. On success/failure resolves/rejects the
@@ -1400,7 +1729,8 @@ function _dispatchFetchWithRetry(item, gen, retries) {
   if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
   const controller = new AbortController();
   _inflightControllers.set(item.url, controller);
-  const timer = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), item.responseType === "text" ? 15000 : CONFIG.FETCH_TIMEOUT);
+  const maxRetries = item.responseType === "text" ? 0 : CONFIG.MAX_RETRIES;
 
   fetch(item.url, { signal: controller.signal })
     .then(async res => {
@@ -1410,7 +1740,8 @@ function _dispatchFetchWithRetry(item, gen, retries) {
       if (res.ok) {
         _consecutive429s = 0;
         updateRateLimitUI(false);
-        const text = await res.text();
+        const text = item.responseType === "text" ?
+          await readLimitedTextResponse(res) : await res.text();
         _totalBytesReceived += new TextEncoder().encode(text).length;
         incApiCalls(1);
         let data;
@@ -1419,13 +1750,14 @@ function _dispatchFetchWithRetry(item, gen, retries) {
           item.reject(new Error("Invalid JSON response"));
           _dequeueNext();
           return;
+
         }
         if (item.responseType === 'leaderboard') data = { data, revision: res.headers.get('X-Revision') };
         if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
         _inflightCount--;
         item.resolve(data);
         _dequeueNext();
-      } else if ((res.status === 429 || res.status >= 500) && retries < CONFIG.MAX_RETRIES) {
+      } else if ((res.status === 429 || res.status >= 500) && retries < maxRetries) {
         const nextRetry = retries + 1;
         let delay;
         if (res.status === 429) {
@@ -1441,7 +1773,9 @@ function _dispatchFetchWithRetry(item, gen, retries) {
         }
         console.warn(`API ${res.status} for ${item.url}, retry ${nextRetry}/${CONFIG.MAX_RETRIES} in ${delay}ms`);
         _inflightCount--;
+        item.retries = nextRetry;
         setTimeout(() => {
+          if (isStale(gen)) { item.reject(new Error('stale generation')); return; }
           _workQueue.push(item);
           _scheduleDequeue();
         }, delay);
@@ -1461,11 +1795,13 @@ function _dispatchFetchWithRetry(item, gen, retries) {
       if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
       _consecutive429s = 0;
       updateRateLimitUI(false);
-      if (retries < CONFIG.MAX_RETRIES) {
+      if (retries < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, retries), 30000);
         console.warn(`Network error for ${item.url}, retry ${retries + 1}/${CONFIG.MAX_RETRIES} in ${delay}ms`);
         _inflightCount--;
+        item.retries = retries + 1;
         setTimeout(() => {
+          if (isStale(gen)) { item.reject(new Error('stale generation')); return; }
           _workQueue.push(item);
           _scheduleDequeue();
         }, delay);
@@ -1749,6 +2085,7 @@ async function loadLeaderboard() {
   status.textContent = 'Importing historical Open LLM Leaderboard v2 scores…';
   try {
     while (total === null || offset < total) {
+      if (!current()) return;
       const params = new URLSearchParams({ dataset: LEADERBOARD_DATASET, config: 'default', split: 'train', offset: String(offset), length: '100' });
       const page = await fetchResource(`https://datasets-server.huggingface.co/rows?${params}`, 'leaderboard');
       if (!current()) return;
@@ -1773,6 +2110,7 @@ async function loadLeaderboard() {
       }
       offset += data.rows.length;
       status.textContent = `Importing historical Open LLM v2 scores: ${offset}/${total} rows checked…`;
+      if (offset < total) await new Promise(resolve => setTimeout(resolve, CONFIG.LEADERBOARD_PAGE_DELAY));
     }
     if (!current()) return;
     _leaderboardRows.clear();
@@ -1927,7 +2265,8 @@ async function runRegexSearch(event) {
           try { text = await fetchText(url); }
           catch (error) {
             if (!current()) return;
-            run.unavailable++;
+            if (/README exceeds/.test(error.message)) run.oversized++;
+            else run.unavailable++;
             matched = false;
           }
           if (!current()) return;
@@ -2728,15 +3067,39 @@ function runFilterPipeline() {
  */
 function walkFilterL1(node) {
   let count = 0, dl = 0, lk = 0, totalCanonical = 0;
+  let derivativeCount = 0, baseDownloads = 0, baseLikes = 0, latestUpdate = 0;
+  const considerDate = ref => {
+    if (!ref || !ref.lastModified) return;
+    const time = Date.parse(ref.lastModified);
+    if (Number.isFinite(time)) latestUpdate = Math.max(latestUpdate, time);
+  };
   for (const l2Node of node.children.values()) {
     const r = walkFilterL2(l2Node);
     if (l2Node.canonical) totalCanonical++;
-    if (l2Node.display && l2Node.canonical) count++;
+    if (l2Node.display && l2Node.canonical) {
+      count++;
+      const base = l2Node.modelRef;
+      baseDownloads += base ? (base.downloads || 0) : 0;
+      baseLikes += base ? (base.likes || 0) : 0;
+      considerDate(base);
+    }
     dl += r.downloads; lk += r.likes;
+    if (!l2Node.display || !l2Node.canonical) continue;
+    for (const authorGroup of l2Node.children.values()) {
+      if (!authorGroup.display) continue;
+      derivativeCount += authorGroup.aggCount || 0;
+      for (const child of authorGroup.children.values()) {
+        if (child.display) considerDate(child.modelRef);
+      }
+    }
   }
   node.aggCount = count;
   node.aggDownloads = dl;
   node.aggLikes = lk;
+  node.aggDerivativeCount = derivativeCount;
+  node.aggBaseDownloads = baseDownloads;
+  node.aggBaseLikes = baseLikes;
+  node.aggLatestUpdate = latestUpdate;
   node.display = count > 0;
   node.totalChildren = totalCanonical;
 }
@@ -2873,7 +3236,7 @@ function walkFilterL4(node) {
 
 // ── Sort Utilities ──
 //   sortCoerce → _cmp → sortRows
-const _NUMERIC_SORT_KEYS = new Set(["downloads", "likes", "totalDownloads", "totalLikes", "count", "paramB"]);
+const _NUMERIC_SORT_KEYS = new Set(["downloads", "likes", "totalDownloads", "totalLikes", "count", "paramB", "derivativeCount", "avgBaseDownloads", "avgBaseLikes", "latestUpdate"]);
 function sortCoerce(v, k) {
   if (_NUMERIC_SORT_KEYS.has(k)) return Number(v);
   if (k.includes("Modified")) { const t = new Date(v || 0).getTime(); return Number.isNaN(t) ? Infinity : t; }
@@ -2887,6 +3250,11 @@ function sortRows(rows, key, asc, subKey) {
       const a = benchmarkValue(x), b = benchmarkValue(y);
       if (a === null || b === null) return a === null && b === null ? x.id.localeCompare(y.id) : a === null ? 1 : -1;
       return (asc ? a - b : b - a) || x.id.localeCompare(y.id);
+    }
+    if (key === "latestUpdate") {
+      if (!x.latestUpdate && y.latestUpdate) return 1;
+      if (x.latestUpdate && !y.latestUpdate) return -1;
+
     }
     let va = sortCoerce(x[key], key), vb = sortCoerce(y[key], key);
     let r = typeof va === 'number' && typeof vb === 'number' ? _cmp(va, vb) : _cmp(va, vb);
@@ -3545,6 +3913,8 @@ function updateArrows() {
     if (active) th.setAttribute("aria-sort", RC.sortAsc ? "ascending" : "descending");
     else th.removeAttribute("aria-sort");
   });
+  const selector = document.getElementById("main-sort-select");
+  if (selector) selector.value = RC.sortKey + "|" + (RC.sortAsc ? "asc" : "desc");
   const ann = document.getElementById("sort-announce");
   if (ann) ann.textContent = `Sorted by ${RC.sortKey} ${RC.sortAsc ? "ascending" : "descending"}`;
 }
@@ -3642,10 +4012,12 @@ function renderMain(authorData, skipSort) {
     return `<tr class="l1-row ${zebra}" data-l1-idx="${idx}" data-author="${escapeHtml(a.author)}">
       <td><button type="button" class="toggle" id="t1-${idx}" aria-expanded="false" aria-label="Expand ${escapeHtml(a.author)} models">▶</button><a href="https://huggingface.co/${escapeHtml(a.author)}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.author)}</a></td>
       <td class="right">${a.count}</td>
+      <td class="right">${fmt(a.derivativeCount || 0)}</td>
       <td class="right">${fmt(a.totalDownloads)}</td>
       <td class="right">${fmt(a.totalLikes)}</td>
+      <td class="right">${a.latestUpdate ? fmtDate(a.latestUpdate) : "—"}</td>
     </tr>
-    <tr class="detail-row" id="d1-${idx}" style="display:none" aria-labelledby="t1-${idx}"><td colspan="4"><div class="detail-inner" id="i1-${idx}"></div></td></tr>`;
+    <tr class="detail-row" id="d1-${idx}" style="display:none" aria-labelledby="t1-${idx}"><td colspan="6"><div class="detail-inner" id="i1-${idx}"></div></td></tr>`;
   }).join('');
 
   tbody.innerHTML = html;
@@ -3829,7 +4201,7 @@ function buildL2TableHtml(idx, author, sorted, state) {
     const zebra = mIdx % 2 === 0 ? "row-even" : "row-odd";
     const orphanBadge = qMethods.length ? qMethods.map(q => `<span class="badge orphan" title="Parent base model filtered out">${escapeHtml(q.toUpperCase())}</span>`).join(' ') + ' ' : '';
     return `<tr class="l2-row ${zebra}" data-l2-idx="${idx}" data-model-idx="${mIdx}" data-model="${escapeHtml(m.id)}" aria-rowindex="${rowIdx}">
-      <td class="model-id-cell" aria-colindex="1"><button type="button" class="toggle" id="t2-${idx}-${mIdx}" aria-expanded="false" aria-label="Expand ${escapeHtml(m.id)}">▶</button>${orphanBadge}<a href="https://huggingface.co/${escapeHtml(m.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}">${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}</a></td>
+      <td class="model-id-cell" aria-colindex="1"><button type="button" class="toggle" id="t2-${idx}-${mIdx}" aria-expanded="false" aria-label="Expand ${escapeHtml(m.id)}">▶</button>${orphanBadge}<a href="https://huggingface.co/${escapeHtml(m.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}">${escapeHtml(m.displayName || m.id.split('/').slice(1).join('/'))}</a><button type="button" class="model-inspect-btn" data-inspect-model="${escapeHtml(m.id)}" aria-label="Inspect ${escapeHtml(m.id)}">Inspect</button></td>
       <td class="center" aria-colindex="2">${escapeHtml(m.pipeline_tag || "(unknown)")}</td>
       <td class="center" aria-colindex="3" style="font-size:0.78rem">${paramBadgeHtml(m)}</td>
       <td class="right" aria-colindex="4">${fmt(m.downloads)}</td>
@@ -4250,7 +4622,7 @@ function renderL4(parentId, author, container) {
   // Optimized: Use map + join for table rows instead of forEach + +=
   html += sorted.map((q, qIdx) => {
     return `<tr class="l4-row" aria-rowindex="${2 + qIdx}">
-      <td class="model-id-cell" aria-colindex="1"><a href="https://huggingface.co/${escapeHtml(q.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}">${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}</a></td>
+      <td class="model-id-cell" aria-colindex="1"><a href="https://huggingface.co/${escapeHtml(q.id)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}">${escapeHtml(q.displayName || q.id.split('/').slice(1).join('/'))}</a><button type="button" class="model-inspect-btn" data-inspect-model="${escapeHtml(q.id)}" aria-label="Inspect ${escapeHtml(q.id)}">Inspect</button></td>
       <td class="center" aria-colindex="2">${escapeHtml(q.pipeline_tag || "(unknown)")}</td>
       <td class="center" aria-colindex="3"><span class="badge ${q.q_method === 'derivative' || q.q_method.includes('finetune') ? 'deriv' : ''}">${escapeHtml(q.q_method)}</span></td>
       <td class="right" aria-colindex="4">${fmt(q.downloads)}</td>
@@ -4457,6 +4829,721 @@ function applyLocalFilters() {
 }
 const debouncedSliderUpdate = debounce(applyLocalFilters, CONFIG.DEBOUNCE_MS);
 
+// ── Model Inspector (API-only) ──
+// Fetch full details on demand, render structured metadata locally, and generate
+// direct version-pinned download links from the model's repository manifest.
+let _inspectorSession = 0;
+const _inspectorState = { id: "", revision: "main", files: [], manifestNote: "" };
+const INSPECTOR_RENDER_LIMIT = 200;
+const INSPECTOR_COPY_LIMIT = 1000;
+
+function normalizeInspectorModelId(input) {
+  const parts = String(input || "").trim().split("/");
+  if (parts.length !== 2 || !parts.every(part =>
+    /^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$/.test(part) &&
+    part !== "." && part !== "..")) {
+    throw new Error("Enter a model ID in owner/model-name format.");
+  }
+  return parts.join("/");
+}
+
+function inspectorApiUrl(modelId) {
+  return "https://huggingface.co/api/models/" +
+    normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+}
+
+function validInspectorFilePath(path) {
+  return typeof path === "string" && path.length > 0 && path.length <= 1024 &&
+    path.split("/").every(part => part && part !== "." && part !== ".." &&
+      !/[\u0000-\u001f\u007f\\]/.test(part));
+}
+
+function inspectorDownloadUrl(modelId, revision, filename) {
+  const idPath = normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+  if (!validInspectorFilePath(filename)) throw new Error("Invalid repository filename.");
+  if (typeof revision !== "string" || !/^(?:[a-f0-9]{40}|main)$/i.test(revision)) {
+    throw new Error("Invalid pinned revision.");
+  }
+  return "https://huggingface.co/" + idPath + "/resolve/" +
+    encodeURIComponent(revision) + "/" + filename.split("/").map(encodeURIComponent).join("/") +
+    "?download=true";
+}
+
+function inspectorFileSize(entry) {
+  const n = entry && (entry.size ?? (entry.lfs && entry.lfs.size));
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+function inspectorIsWeight(path) {
+  return /\.(?:gguf|safetensors|bin|pt|pth|ckpt|onnx|h5|ggml|mlx)(?:\.index\.json)?$/i.test(path);
+}
+
+function buildInspectorManifest(siblings, tree) {
+  const map = new Map();
+  for (const entry of Array.isArray(siblings) ? siblings : []) {
+    const path = entry && (entry.rfilename || entry.path);
+    if (!validInspectorFilePath(path)) continue;
+    map.set(path, { path, size: inspectorFileSize(entry), weight: inspectorIsWeight(path) });
+  }
+  for (const entry of Array.isArray(tree) ? tree : []) {
+    const path = entry && (entry.path || entry.rfilename);
+    if (!validInspectorFilePath(path) || (entry.type && entry.type !== "file")) continue;
+    const n = inspectorFileSize(entry);
+    const current = map.get(path);
+    map.set(path, { path, size: n === null ? (current ? current.size : null) : n, weight: inspectorIsWeight(path) });
+  }
+  return [...map.values()].sort((a, b) =>
+    Number(b.weight) - Number(a.weight) || a.path.localeCompare(b.path));
+}
+
+function inspectorFileSizeLabel(bytes) {
+  if (bytes === null) return "—";
+  if (bytes === 0) return "0 B";
+  const scale = Math.min(4, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return (bytes / Math.pow(1024, scale)).toFixed(scale === 0 ? 0 : 2) +
+    " " + ["B", "KiB", "MiB", "GiB", "TiB"][scale];
+}
+
+function inspectorValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return text.length <= 400 ? text : text.slice(0, 397) + "…";
+}
+
+function inspectorFact(parent, name, value) {
+  if (value === null || value === undefined || value === "") return;
+  const term = document.createElement("dt");
+  term.textContent = name;
+  const description = document.createElement("dd");
+  description.textContent = inspectorValue(value);
+  parent.append(term, description);
+}
+
+function inspectorRenderedModelDetails(info) {
+  const root = document.getElementById("inspector-details");
+  root.replaceChildren();
+  const subtitle = document.createElement("p");
+  subtitle.className = "inspect-file-note";
+  subtitle.textContent = "Rendered from model API metadata. The full README body is not required.";
+  root.append(subtitle);
+
+  const facts = document.createElement("dl");
+  facts.className = "inspect-facts";
+  const card = info.cardData && typeof info.cardData === "object" ? info.cardData : {};
+  const config = info.config && typeof info.config === "object" ? info.config : {};
+  inspectorFact(facts, "Model", info.id || _inspectorState.id);
+  inspectorFact(facts, "Pipeline", info.pipeline_tag);
+  inspectorFact(facts, "Downloads", Number.isFinite(info.downloads) ? info.downloads.toLocaleString() : null);
+  inspectorFact(facts, "Likes", Number.isFinite(info.likes) ? info.likes.toLocaleString() : null);
+  inspectorFact(facts, "Updated", info.lastModified && String(info.lastModified).slice(0, 19));
+  inspectorFact(facts, "License", card.license || (Array.isArray(info.tags) && info.tags.find(tag => tag.startsWith("license:"))));
+  inspectorFact(facts, "Gated", info.gated === false ? "No" : (info.gated || "Unknown"));
+  inspectorFact(facts, "Languages", card.language);
+  inspectorFact(facts, "Base model", card.base_model);
+  inspectorFact(facts, "Architecture", config.architectures || info.transformersInfo?.auto_model);
+  inspectorFact(facts, "Model type", config.model_type);
+  inspectorFact(facts, "Context (model config)", config.max_position_embeddings);
+  inspectorFact(facts, "Revision", _inspectorState.revision);
+  inspectorFact(facts, "Tags", Array.isArray(info.tags) ? info.tags.slice(0, 24).join(", ") : null);
+  root.append(facts);
+
+  if (info.cardData && typeof info.cardData === "object") {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = "Structured model-card fields (API)";
+    const pre = document.createElement("pre");
+    const json = JSON.stringify(info.cardData, null, 2);
+    pre.textContent = json.length > 30000 ? json.slice(0, 30000) + "\n… (truncated)" : json;
+    details.append(summary, pre);
+    root.append(details);
+  }
+}
+
+// ── Browser-native file delivery ──
+// The standard Hub file URL remains available. Some browser policies allow
+// metadata fetches but block navigation to file URLs, so offer an explicit,
+// user-initiated streaming save as an alternative. No file buffering or proxy.
+let _inspectorFileTransfer = null;
+
+function inspectorCancelFileTransfer() {
+  if (_inspectorFileTransfer) _inspectorFileTransfer.abort();
+}
+
+function inspectorDownloadStatus(message) {
+  const node = document.getElementById("inspector-download-status");
+  if (node) node.textContent = message;
+}
+
+async function inspectorStreamSave(path) {
+  const file = _inspectorState.files.find(entry => entry.path === path);
+  if (!file || !validInspectorFilePath(path)) {
+    inspectorDownloadStatus("Unknown or invalid file path.");
+    return;
+  }
+  if (_inspectorFileTransfer) {
+    inspectorDownloadStatus("A download is already active. Cancel it before starting another.");
+    return;
+  }
+  if (typeof window.showSaveFilePicker !== "function") {
+    inspectorDownloadStatus("This browser does not support streaming file saves. Use Open URL or Copy link.");
+    return;
+  }
+
+  const session = _inspectorSession;
+  const modelId = _inspectorState.id, revision = _inspectorState.revision;
+  const url = inspectorDownloadUrl(modelId, revision, path);
+  const name = path.split("/").pop();
+  let destination;
+  try {
+    // Must be invoked directly from the button gesture, before any fetch.
+    destination = await window.showSaveFilePicker({ suggestedName: name });
+  } catch (error) {
+    inspectorDownloadStatus(error && error.name === "AbortError" ?
+      "Save cancelled." : "Could not select a destination: " + error.message);
+    return;
+  }
+  if (session !== _inspectorSession) return;
+
+  const controller = new AbortController();
+  _inspectorFileTransfer = controller;
+  const cancel = document.getElementById("inspector-cancel-save");
+  cancel.hidden = false;
+  let writable = null, reader = null, received = 0, lastUpdate = 0;
+  try {
+    inspectorDownloadStatus("Connecting to the original file endpoint for " + name + "…");
+    const response = await fetch(url, {
+      method: "GET", credentials: "omit", redirect: "follow",
+      cache: "no-store", signal: controller.signal
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    if (!response.body || typeof response.body.getReader !== "function") {
+      throw new Error("Streaming response is unavailable in this browser");
+    }
+    writable = await destination.createWritable();
+    reader = response.body.getReader();
+    const advertised = Number(response.headers.get("content-length"));
+    const expected = Number.isFinite(advertised) && advertised > 0 ? advertised : file.size;
+    while (true) {
+      if (controller.signal.aborted) throw new Error("Download cancelled");
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      await writable.write(chunk.value);
+      received += chunk.value.byteLength;
+      const now = Date.now();
+      if (now - lastUpdate > 350 && session === _inspectorSession) {
+        const pct = expected ? " / " + inspectorFileSizeLabel(expected) +
+          " (" + Math.min(100, Math.round(received / expected * 100)) + "%)" : "";
+        inspectorDownloadStatus("Saving " + name + ": " +
+          inspectorFileSizeLabel(received) + pct);
+        lastUpdate = now;
+      }
+    }
+    await writable.close();
+    writable = null;
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus("Saved " + name + " (" +
+        inspectorFileSizeLabel(received) + ").");
+    }
+  } catch (error) {
+    if (writable) await writable.abort().catch(() => {});
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus(controller.signal.aborted ?
+        "Download cancelled; incomplete output was discarded." :
+        "Browser streaming failed: " + error.message +
+        ". Try Open URL, Resolve delivery URL or Copy link; CORS and network rules may differ.");
+    }
+  } finally {
+    if (reader) { try { reader.releaseLock(); } catch { /* Closed or cancelled stream. */ } }
+    if (_inspectorFileTransfer === controller) {
+      _inspectorFileTransfer = null;
+      cancel.hidden = true;
+    }
+  }
+}
+
+// Resolve a signed delivery destination with a HEAD request (no model bytes).
+// This is best-effort: the redirected CDN can still reject browser CORS.
+async function inspectorResolveDelivery(path, rowButton) {
+  if (!_inspectorState.files.some(file => file.path === path)) return;
+  const session = _inspectorSession;
+  const url = inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, path);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  rowButton.disabled = true;
+  inspectorDownloadStatus("Looking up the file delivery address (HEAD request only)…");
+  try {
+    const response = await fetch(url, {
+      method: "HEAD", credentials: "omit", redirect: "follow",
+      cache: "no-store", signal: controller.signal
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    if (session !== _inspectorSession || !rowButton.isConnected) return;
+    const resolved = new URL(response.url);
+    if (resolved.protocol !== "https:") throw new Error("Non-HTTPS delivery destination");
+    if (resolved.href === url) {
+      inspectorDownloadStatus("No separate delivery URL was provided. Use Open URL or Save (stream).");
+      return;
+    }
+    // Signed CDN URLs often expire; only display them for this model session.
+    const container = rowButton.parentElement;
+    let destination = container.querySelector("a[data-delivery-link]");
+    if (!destination) {
+      destination = document.createElement("a");
+      destination.dataset.deliveryLink = "true";
+      destination.target = "_blank";
+      destination.rel = "noopener noreferrer";
+      destination.textContent = "Open delivery URL";
+      container.append(destination);
+    }
+    destination.href = resolved.href;
+    rowButton.dataset.resolvedUrl = resolved.href;
+    rowButton.textContent = "Copy delivery URL";
+    inspectorDownloadStatus("Resolved an HTTPS delivery address. This temporary URL may expire.");
+  } catch (error) {
+    if (session === _inspectorSession) {
+      inspectorDownloadStatus("Could not resolve delivery URL: " + error.message +
+        ". The original file URL remains available.");
+    }
+  } finally {
+    clearTimeout(timeout);
+    rowButton.disabled = false;
+  }
+}
+
+function inspectorMatchingFiles() {
+  const term = document.getElementById("inspector-file-filter").value.toLowerCase().trim();
+  const weightsOnly = document.getElementById("inspector-weights-only").checked;
+  return _inspectorState.files.filter(file =>
+    (!weightsOnly || file.weight) && (!term || file.path.toLowerCase().includes(term)));
+}
+
+function renderInspectorFiles() {
+  const rows = document.getElementById("inspector-file-rows");
+  rows.replaceChildren();
+  const matches = inspectorMatchingFiles();
+  const first = matches.slice(0, INSPECTOR_RENDER_LIMIT);
+  for (const file of first) {
+    const tr = document.createElement("tr");
+    const name = document.createElement("td");
+    name.textContent = file.path;
+    const size = document.createElement("td");
+    size.textContent = inspectorFileSizeLabel(file.size);
+    const actions = document.createElement("td");
+    const url = inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, file.path);
+    const a = document.createElement("a");
+    a.textContent = "Open URL";
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.title = "Open the original Hugging Face file URL (may be restricted in some browsers)";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy link";
+    copy.dataset.downloadPath = file.path;
+    copy.setAttribute("aria-label", "Copy direct download link for " + file.path);
+    const save = document.createElement("button");
+    save.type = "button";
+    save.textContent = "Save (stream)";
+    save.dataset.savePath = file.path;
+    save.title = "Stream a file to disk in a compatible browser without buffering the whole model";
+    const resolve = document.createElement("button");
+    resolve.type = "button";
+    resolve.textContent = "Resolve delivery URL";
+    resolve.dataset.resolvePath = file.path;
+    resolve.title = "Inspect the server's redirect destination without downloading the model";
+    actions.append(a, save, resolve, copy);
+    tr.append(name, size, actions);
+    rows.append(tr);
+  }
+  const count = matches.length;
+  document.getElementById("inspector-file-notice").textContent =
+    "Showing " + Math.min(count, INSPECTOR_RENDER_LIMIT) + " of " + count +
+    " matching files (" + _inspectorState.files.length + " total). " +
+    (_inspectorState.manifestNote || "File sizes depend on available metadata.");
+}
+
+async function inspectorCopyLinks(text) {
+  const status = document.getElementById("inspector-status");
+  const fallback = document.getElementById("inspector-link-fallback");
+  fallback.hidden = true;
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Download link(s) copied to clipboard.";
+      return;
+    } catch { /* Show a selectable fallback for local-file contexts. */ }
+  }
+  fallback.hidden = false;
+  fallback.value = text;
+  fallback.focus();
+  fallback.select();
+  status.textContent = "Clipboard access unavailable; select and copy the links shown below.";
+}
+
+// ── Model card README reader ──
+// Build safe DOM nodes from untrusted Markdown: no raw HTML evaluation.
+function inspectorReadmeUrl(modelId, revision, route = "raw") {
+  if (route !== "raw" && route !== "resolve") throw new Error("Unsupported README route.");
+  const id = normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/");
+  if (!/^(?:[0-9a-f]{40}|main)$/i.test(revision)) throw new Error("Invalid README revision.");
+  return "https://huggingface.co/" + id + "/" + route + "/" +
+    encodeURIComponent(revision) + "/README.md";
+}
+
+function inspectorSafeMarkdownUrl(target, modelId, revision) {
+  if (typeof target !== "string" || !target.trim() || target.length > 2048) return null;
+  try {
+    const base = "https://huggingface.co/" +
+      normalizeInspectorModelId(modelId).split("/").map(encodeURIComponent).join("/") +
+      "/blob/" + encodeURIComponent(revision) + "/";
+    const result = new URL(target.trim(), base);
+    return result.protocol === "https:" || result.protocol === "http:" ? result.href : null;
+  } catch { return null; }
+}
+
+function inspectorAppendInline(parent, source, modelId, revision) {
+  const raw = String(source || "");
+  const token = /(!?\[([^\]]+)\]\(([^)\s]+)\)|\x60([^\x60]+)\x60|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_)/g;
+  let offset = 0, found;
+  while ((found = token.exec(raw))) {
+    if (found.index > offset) parent.append(document.createTextNode(raw.slice(offset, found.index)));
+    let node;
+    if (found[2] !== undefined) {
+      const url = inspectorSafeMarkdownUrl(found[3], modelId, revision);
+      if (url) {
+        node = document.createElement("a");
+        node.href = url;
+        node.target = "_blank";
+        node.rel = "noopener noreferrer";
+        node.textContent = (found[1].startsWith("!") ? "Image: " : "") + found[2];
+      } else node = document.createTextNode(found[1]);
+    } else if (found[4] !== undefined) {
+      node = document.createElement("code");
+      node.textContent = found[4];
+    } else {
+      node = document.createElement(found[5] !== undefined || found[6] !== undefined ? "strong" : "em");
+      node.textContent = found[5] || found[6] || found[7] || found[8];
+    }
+    parent.append(node);
+    offset = token.lastIndex;
+  }
+  if (offset < raw.length) parent.append(document.createTextNode(raw.slice(offset)));
+}
+
+function inspectorTableCells(line) {
+  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
+}
+function inspectorIsTableDelimiter(line) {
+  return /^\s*\|?\s*:?-{3,}:?\s*\|(?:\s*:?-{3,}:?\s*\|?)+\s*$/.test(line);
+}
+
+function inspectorRenderMarkdown(markdown, target, modelId, revision) {
+  target.replaceChildren();
+  const lines = String(markdown || "").replace(/\r\n?/g, "\n").split("\n");
+  const maxLines = 1800;
+  const n = Math.min(lines.length, maxLines);
+  let i = 0;
+  // YAML front matter is shown in the separate structured metadata panel.
+  if (lines[0] === "---") {
+    const end = lines.findIndex((line, index) => index > 0 && index < 120 && (line === "---" || line === "..."));
+    if (end > 0) i = end + 1;
+  }
+
+  const add = (type, text) => {
+    const el = document.createElement(type);
+    inspectorAppendInline(el, text, modelId, revision);
+    target.append(el);
+    return el;
+  };
+  const blockStart = text =>
+    /^\s*(?:#{1,6}\s|>|[-*+]\s|\d+[.)]\s|\x60{3}|~{3})/.test(text) ||
+    /^\s*(?:---+|\*\*\*+)\s*$/.test(text);
+
+  while (i < n) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
+
+    const fence = line.match(/^\s*(\x60{3,}|~{3,})/);
+    if (fence) {
+      const marker = fence[1][0], minLength = fence[1].length;
+      const content = [];
+      i++;
+      while (i < n) {
+        if (new RegExp("^\\s*" + marker + "{" + minLength + ",}\\s*$").test(lines[i])) { i++; break; }
+        content.push(lines[i++]);
+      }
+      const pre = document.createElement("pre"), code = document.createElement("code");
+      code.textContent = content.join("\n");
+      pre.append(code); target.append(pre); continue;
+    }
+
+    const heading = line.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) { add("h" + heading[1].length, heading[2]); i++; continue; }
+
+    if (/^\s*(?:---+|\*\*\*+)\s*$/.test(line)) {
+      target.append(document.createElement("hr")); i++; continue;
+    }
+
+    if (i + 1 < n && /^\s*\|.*\|\s*$/.test(line) && inspectorIsTableDelimiter(lines[i + 1])) {
+      const headers = inspectorTableCells(line), table = document.createElement("table");
+      const thead = document.createElement("thead"), hrow = document.createElement("tr");
+      for (const cell of headers) {
+        const th = document.createElement("th");
+        inspectorAppendInline(th, cell, modelId, revision); hrow.append(th);
+      }
+      thead.append(hrow); table.append(thead);
+      const tbody = document.createElement("tbody");
+      i += 2;
+      while (i < n && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        const tr = document.createElement("tr"), cells = inspectorTableCells(lines[i++]);
+        for (let j = 0; j < headers.length; j++) {
+          const td = document.createElement("td");
+          inspectorAppendInline(td, cells[j] || "", modelId, revision); tr.append(td);
+        }
+        tbody.append(tr);
+      }
+      table.append(tbody); target.append(table); continue;
+    }
+
+    const list = line.match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+    if (list) {
+      const ordered = /^\d/.test(list[1]), el = document.createElement(ordered ? "ol" : "ul");
+      while (i < n) {
+        const next = lines[i].match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+        if (!next || ordered !== /^\d/.test(next[1])) break;
+        const li = document.createElement("li");
+        inspectorAppendInline(li, next[2], modelId, revision); el.append(li); i++;
+      }
+      target.append(el); continue;
+    }
+
+    if (/^\s*>\s?/.test(line)) {
+      const block = document.createElement("blockquote"), parts = [];
+      while (i < n && /^\s*>\s?/.test(lines[i])) parts.push(lines[i++].replace(/^\s*>\s?/, ""));
+      inspectorAppendInline(block, parts.join(" "), modelId, revision);
+      target.append(block); continue;
+    }
+
+    const paragraph = [];
+    while (i < n && lines[i].trim() &&
+      (paragraph.length === 0 || (!blockStart(lines[i]) &&
+        !(i + 1 < n && inspectorIsTableDelimiter(lines[i + 1]))))) {
+      paragraph.push(lines[i++].trim());
+    }
+    if (paragraph.length) add("p", paragraph.join(" "));
+    else i++;
+  }
+  if (n < lines.length) add("p", "README preview truncated after " + maxLines +
+    " lines. The Raw Markdown panel contains the complete bounded response.");
+}
+
+async function loadInspectorReadme(modelId, revision, current) {
+  const status = document.getElementById("inspector-readme-status");
+  const content = document.getElementById("inspector-readme-content");
+  const rawPanel = document.getElementById("inspector-readme-raw-panel");
+  const rawPre = document.getElementById("inspector-readme-raw");
+  status.textContent = "Retrieving README.md…";
+  content.replaceChildren();
+  rawPanel.hidden = true;
+  let markdown, lastError;
+  for (const route of ["raw", "resolve"]) {
+    try {
+      markdown = await fetchText(inspectorReadmeUrl(modelId, revision, route));
+      if (!current()) return;
+      if (typeof markdown !== "string" || !markdown.trim()) throw new Error("Empty README response");
+      if (/^\s*(?:<!doctype\s+html\b|<html[\s>])/i.test(markdown)) {
+        throw new Error("README endpoint returned an HTML page instead of Markdown");
+      }
+      break;
+    } catch (error) {
+      if (!current()) return;
+      lastError = error;
+    }
+  }
+  if (!current()) return;
+  if (markdown === undefined) {
+    status.textContent = "README.md could not be retrieved (" +
+      (lastError ? lastError.message : "unknown error") +
+      "). Structured model-card fields remain available in the metadata panel.";
+    return;
+  }
+  try {
+    inspectorRenderMarkdown(markdown, content, modelId, revision);
+    rawPre.textContent = markdown;
+    rawPanel.hidden = false;
+    status.textContent = "README.md rendered locally from the model repository (" +
+      (markdown.length / 1024).toFixed(0) + " KiB). Raw Markdown is also available.";
+  } catch (error) {
+    content.replaceChildren();
+    rawPre.textContent = markdown;
+    rawPanel.hidden = false;
+    status.textContent = "Formatted rendering unavailable (" + error.message +
+      "). Use the Raw Markdown panel.";
+  }
+}
+
+async function inspectorFetchModelInfo(modelId) {
+  try {
+    return { info: await fetchJson(inspectorApiUrl(modelId) + "?full=true&cardData=true"), partial: false };
+  } catch (detailError) {
+    // Some API clients can list models even when a detail request fails. A
+    // listing match still supports a useful, explicitly partial inspection.
+    const name = modelId.split("/")[1];
+    for (const query of [modelId, name]) {
+      try {
+        const models = await fetchJson("https://huggingface.co/api/models?search=" +
+          encodeURIComponent(query) + "&sort=downloads&direction=-1&limit=100&full=true&cardData=true");
+        if (!Array.isArray(models)) continue;
+        const match = models.find(model => model && typeof model.id === "string" &&
+          model.id.toLowerCase() === modelId.toLowerCase());
+        if (match) return { info: match, partial: true };
+      } catch { /* Continue to another read-only search query. */ }
+    }
+    throw detailError;
+  }
+}
+
+async function openModelInspector(input) {
+  let requested;
+  try { requested = normalizeInspectorModelId(input); }
+  catch (error) {
+    document.getElementById("inspect-lookup-result").textContent = error.message;
+    return;
+  }
+  document.getElementById("inspect-lookup-result").textContent = "";
+  const dialog = document.getElementById("model-inspector");
+  const serial = ++_inspectorSession;
+  const generation = _fetchGeneration;
+  _inspectorState.id = requested;
+  _inspectorState.revision = "main";
+  _inspectorState.files = [];
+  _inspectorState.manifestNote = "";
+  document.getElementById("inspector-title").textContent = requested;
+  document.getElementById("inspector-details").replaceChildren();
+  document.getElementById("inspector-readme-panel").open = true;
+  document.getElementById("inspector-readme-content").replaceChildren();
+  document.getElementById("inspector-readme-status").textContent = "Waiting for model metadata…";
+  document.getElementById("inspector-readme-raw-panel").hidden = true;
+  document.getElementById("inspector-file-section").hidden = true;
+  document.getElementById("inspector-file-filter").value = "";
+  document.getElementById("inspector-weights-only").checked = false;
+  document.getElementById("inspector-link-fallback").hidden = true;
+  inspectorCancelFileTransfer();
+  inspectorDownloadStatus("Direct file links are shown below. Save (stream) uses browser Fetch if supported.");
+  document.getElementById("inspector-status").textContent = "Fetching model metadata from selected API source…";
+  if (!dialog.open) dialog.showModal();
+
+  const current = () => serial === _inspectorSession && generation === _fetchGeneration && dialog.open;
+  try {
+    const { info, partial } = await inspectorFetchModelInfo(requested);
+    if (!current()) return;
+    if (!info || typeof info !== "object" || Array.isArray(info) || !info.id) {
+      throw new Error("The API returned no usable model information.");
+    }
+    const canonicalId = normalizeInspectorModelId(info.id);
+    if (canonicalId.toLowerCase() !== requested.toLowerCase()) {
+      throw new Error("The API returned an unexpected model identity.");
+    }
+    _inspectorState.id = canonicalId;
+    _inspectorState.revision = typeof info.sha === "string" && /^[a-f0-9]{40}$/i.test(info.sha) ? info.sha : "main";
+    _inspectorState.files = buildInspectorManifest(info.siblings, []);
+    _inspectorState.manifestNote = (partial ? "Partial model listing: individual detail metadata was unavailable. " : "") +
+      (_inspectorState.revision === "main" ?
+      "Revision was not supplied; download links reference the moving main branch." :
+      "Links use a pinned model revision.");
+    document.getElementById("inspector-title").textContent = canonicalId;
+    inspectorRenderedModelDetails(info);
+    // README failure must not prevent using structured metadata or file links.
+    loadInspectorReadme(canonicalId, _inspectorState.revision, current);
+    const section = document.getElementById("inspector-file-section");
+    section.hidden = false;
+    document.getElementById("inspector-file-revision").textContent = "Download revision: " +
+      _inspectorState.revision + " — downloads use the original Hugging Face file endpoint.";
+    document.getElementById("inspector-status").textContent = partial ?
+      "Partial model metadata loaded from search. Checking repository file details…" :
+      "Model metadata loaded. Checking repository tree for file sizes…";
+    renderInspectorFiles();
+
+    try {
+      const tree = await fetchJson(inspectorApiUrl(canonicalId) +
+        "/tree/" + encodeURIComponent(_inspectorState.revision) + "?recursive=true");
+      if (!current()) return;
+      if (!Array.isArray(tree)) throw new Error("Unexpected repository tree response");
+      _inspectorState.files = buildInspectorManifest(info.siblings, tree);
+      _inspectorState.manifestNote += tree.length >= 1000 ?
+        " The tree endpoint may be paginated; filenames from the model API are also included." : "";
+      document.getElementById("inspector-status").textContent = "Model metadata and repository files loaded.";
+    } catch {
+      if (!current()) return;
+      _inspectorState.manifestNote += " Additional file-size metadata unavailable; using the model API file list.";
+      document.getElementById("inspector-status").textContent =
+        "Model metadata loaded. Repository tree unavailable; download links use available filenames.";
+    }
+    if (current()) renderInspectorFiles();
+  } catch (error) {
+    if (!current()) return;
+    document.getElementById("inspector-status").textContent =
+      "Could not inspect model: " + error.message +
+      ". Try a known public owner/model-name; listings may still work independently.";
+  }
+}
+
+function setupModelInspector() {
+  const dialog = document.getElementById("model-inspector");
+  const input = document.getElementById("inspect-model-id");
+  const submit = () => openModelInspector(input.value);
+  document.getElementById("inspect-model-go").addEventListener("click", submit);
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") { event.preventDefault(); submit(); }
+  });
+  document.getElementById("inspector-close").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => { _inspectorSession++; inspectorCancelFileTransfer(); });
+  document.getElementById("inspector-file-filter").addEventListener("input", renderInspectorFiles);
+  document.getElementById("inspector-weights-only").addEventListener("change", renderInspectorFiles);
+
+  document.getElementById("inspector-copy-matching").addEventListener("click", () => {
+    const matching = inspectorMatchingFiles();
+    if (!matching.length) {
+      document.getElementById("inspector-status").textContent = "No matching files to copy.";
+      return;
+    }
+    if (matching.length > INSPECTOR_COPY_LIMIT) {
+      document.getElementById("inspector-status").textContent =
+        "Too many matching links; narrow the filename filter first (limit " + INSPECTOR_COPY_LIMIT + ").";
+      return;
+    }
+    const links = matching.map(file =>
+      inspectorDownloadUrl(_inspectorState.id, _inspectorState.revision, file.path));
+    inspectorCopyLinks(links.join("\n"));
+  });
+
+  document.getElementById("inspector-file-rows").addEventListener("click", event => {
+    const copy = event.target.closest("button[data-download-path]");
+    if (copy) {
+      inspectorCopyLinks(inspectorDownloadUrl(
+        _inspectorState.id, _inspectorState.revision, copy.dataset.downloadPath));
+      return;
+    }
+    const save = event.target.closest("button[data-save-path]");
+    if (save) { inspectorStreamSave(save.dataset.savePath); return; }
+    const resolve = event.target.closest("button[data-resolve-path]");
+    if (resolve) {
+      if (resolve.dataset.resolvedUrl) inspectorCopyLinks(resolve.dataset.resolvedUrl);
+      else inspectorResolveDelivery(resolve.dataset.resolvePath, resolve);
+    }
+  });
+  document.getElementById("inspector-cancel-save").addEventListener("click", inspectorCancelFileTransfer);
+
+  // Capture before the existing L2 delegated row click, which otherwise expands.
+  document.getElementById("main-table").addEventListener("click", event => {
+    const button = event.target.closest("button[data-inspect-model]");
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openModelInspector(button.dataset.inspectModel);
+  }, true);
+}
+
 // ── RenderCoordinator Method Wiring ──
 RenderCoordinator.renderL1 = renderMain;
 RenderCoordinator.updateArrows = function() {
@@ -4502,6 +5589,15 @@ document.querySelector("#main-table").addEventListener("keydown", e => {
   e.preventDefault();
   th.click();
 });
+document.getElementById("main-sort-select").addEventListener("change", event => {
+  const [key, direction] = event.target.value.split("|");
+  const accepted = new Set(["author", "count", "derivativeCount", "totalDownloads",
+    "totalLikes", "latestUpdate", "avgBaseDownloads", "avgBaseLikes"]);
+  if (!accepted.has(key) || (direction !== "asc" && direction !== "desc")) return;
+  RC._state.l1Sort.key = key;
+  RC._state.l1Sort.asc = direction === "asc";
+  RC.requestRender(new Set(RC.expandedSections), false);
+});
 document.getElementById("get-quick-results-btn").addEventListener("click", () => applyFilters(true, false));
 document.getElementById("get-deep-results-btn").addEventListener("click", () => applyFilters(true, true));
 document.getElementById("clear-cache-btn").addEventListener("click", () => {
@@ -4529,11 +5625,14 @@ document.getElementById("hide-missing-param-chip").addEventListener("click", () 
 
 // ── Initialization (_initApp) ──
 function _initApp() {
+  setupApiConnectionControls();
+  setupModelInspector();
   initAppearanceAndBenchmarks();
   document.getElementById('regex-mode').addEventListener('change', updateSearchMode);
   updateSearchMode();
   document.getElementById('regex-search-form').addEventListener('submit', runRegexSearch);
   document.getElementById('regex-stop').addEventListener('click', stopRegexSearch);
+
   document.getElementById("ds-from").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ds-to").max = CONFIG.DATE_SLIDER_MAX;
   document.getElementById("ps-from").max = CONFIG.PARAM_SLIDER_MAX;

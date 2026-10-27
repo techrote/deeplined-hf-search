@@ -241,3 +241,79 @@ L2 text filter is applied globally in `passesTreeNodeFilters()` before L1 aggreg
 - **L2/L3/L4 render deduplication**: Level-specific differences (badges, popups, expansion/collapse cascade, data flow) require ~10+ callback parameters in a generic helper — reduces readability more than duplication costs.
 - **JSDoc annotations**: Adds bulk to a single-file app with existing design notes and self-documenting naming conventions. No runtime benefit.
 - **IntersectionObserver lazy loading**: High complexity for marginal UX gain. Click-to-expand model works well; pre-fetching wastes API calls on models users never expand.
+
+---
+
+## Optional network transport
+
+The app retains its single-file direct-Hub behaviour by default. Its
+optional API Connection panel selects a gateway origin, stored locally when
+browser storage is available. The existing fetchJson queue resolves the
+selected transport before deduplicating requests. Switching sources resets
+cached results and aborts in-flight work.
+
+The gateway (gateway/src/worker.mjs) is a separate read-only Worker with a
+fixed Hugging Face upstream and a narrow metadata route allowlist. It
+validates paths and query parameters, bounds response sizes, and does not
+follow upstream redirects. Its CORS allowlist is not authentication.
+
+Browser connection tests use the Hub listing endpoint or the gateway
+/health endpoint, without altering system network configuration.
+
+Design and usage: docs/metadata-transport.md and gateway/README.md.
+
+---
+
+## API-first Model Inspector
+
+Model inspection is deliberately separate from the search-tree normalization:
+the existing normalizeModel function retains its compact search data. The
+inspector fetches full structured metadata on demand from the existing fetchJson
+queue, preserving request pacing and Direct/Gateway selection.
+
+Each L2 and L4 row has an Inspect button. A manual exact model-ID field
+supports investigation beyond the displayed top-N results. The native dialog
+renders API data as text nodes, without evaluating HTML from model cards.
+If the detail path fails, exact matching on the listing API can provide
+partial metadata; failure to obtain the optional tree leaves siblings intact.
+
+File paths must be taken from actual API results. Download links use
+/resolve/{revision}/{filename}?download=true on the original host.
+A SHA from the API pins the revision, with explicit main fallback if absent.
+No downloads are performed by JavaScript. Render and copy limits prevent
+oversized pages and clipboard payloads. Inspector serial and fetch-generation
+guards suppress stale results when users change sources or close the dialog.
+
+See docs/api-model-inspector.md for full contracts and acceptance checks.
+
+---
+
+## README, File Delivery and Extended Author Sorting (v261023.03)
+
+- Plain text README responses are fetched through the existing request manager,
+  preserving source selection, queue throttling and generation cancellation.
+  README reads have a 1 MiB streaming cap, a shorter timeout and no retries.
+  First attempt /raw/{revision}/README.md, then /resolve/{revision}/README.md.
+- The inspector renders a safe Markdown subset using DOM text nodes/elements,
+  never evaluates repository HTML, and provides the original bounded Markdown
+  separately. README unavailability does not block structured metadata/files.
+- The standard /resolve/{revision}/{path}?download=true links remain available.
+  They are valid Hub file URLs, but browser navigation may be restricted even
+  when metadata fetches work. A user-initiated File System Access API path
+  streams a GET response directly to a selected file in supported browsers;
+  no full-model response buffering or local service is involved. Cancellation
+  aborts the request and discards the incomplete output.
+- An optional HEAD request follows the file delivery redirect, revealing a
+  short-lived CDN URL only if CORS permits it. Network/CORS rejection is
+  reported without claiming a successful download. No CDN addresses persist.
+- The main author table now exposes derivative count and last updated date.
+  Its sort selector additionally offers name, totals, recency, derivative count,
+  and average base-model downloads/likes, each in both directions. Derived
+  metrics use admitted/visible canonical bases and visible derivatives,
+  respecting existing date, task, quantization and text filters.
+- Sorting remains local, deterministic, and is mediated by RenderCoordinator
+  to preserve its expansion/rerender lifecycle.
+
+Leaderboard imports contact datasets-server.huggingface.co directly even when the optional model-metadata gateway is selected; the gateway allowlist is not expanded. README scans now share master's bounded plain-text reader. Theme tokens also cover the integrated API connection and model-inspector controls.
+
+Leaderboard pages are paced at one per second in addition to shared queue throttling. Queue items retain their retry count and original generation across backoff; retries cannot reset indefinitely or revive stale source requests.
