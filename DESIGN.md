@@ -190,6 +190,14 @@ Filter bar containers carry a `chip-group` class; selector rules use `.chip-grou
 
 ## Filter Architecture
 
+### Optional Open LLM Leaderboard v2 import
+
+The user-initiated importer reads the official `open-llm-leaderboard/contents` dataset's default/train export in pages of 100 through the shared fetch queue. It uses `/rows` rather than `/filter`, whose cold index can be unavailable. A typed `leaderboard` response adds the CORS-exposed X-Revision header alongside parsed JSON. Every page must expose the same 40-hex revision, stable total, sequential row indices, supported schema, and untruncated cells. Exports are bounded to 10,000 rows and published atomically only after the full scan. Failure, Stop, and generation changes cannot publish partial data. The old table remains untouched until commit.
+
+The compact session cache stores only exact IDs, evaluation provenance/settings, and an allowlist of numeric score columns; the dataset's HTML Model column is never rendered. Flagged/invalid rows are excluded. A bounded lazy score cache derives source-qualified benchmark entries by model ID. Comparison keys include dataset revision, v2 metric, precision, weight type and chat-template setting; evaluated model SHA/run/submission details are shown in the per-model context, not used to prevent cross-model comparison. Raw and normalized metrics have distinct keys. Conflicting evaluations remain unavailable via the existing benchmarkValue rule. The published Average is imported as its own named metric, not recomputed.
+
+No fuzzy IDs, base-model inheritance, current-revision equivalence, or persistent leaderboard storage is implied. Clear Cache stops the importer and clears both caches. UI statuses identify the historical source and coverage limits; future model loads can reuse imported data without new API requests.
+
 ### Independent bounded advanced discovery
 
 The advanced search panel uses a separate results table and a bounded, Hub-sorted candidate query (1–500 models). It does not alter the tree or inherit its filters. Name and raw README queries are ANDed, and name matching runs before card retrieval. Standard name queries automatically seed Hub discovery from the longest literal name fragment (at least two characters) in a required term. Parsing retains literal segments, splitting at wildcard gaps and excluding negative terms; name-like Unicode letters, numbers, underscores and hyphens can form a seed. Thus `*npc*` retrieves candidates using `search=npc` before applying the exact wildcard query, rather than filtering unrelated popular models. Regex syntax is never inferred as a literal seed. Card terms are never used as name seeds, to avoid excluding models that mention a term only in their cards.

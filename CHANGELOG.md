@@ -1,5 +1,12 @@
 # Changelog — Streamlined HF Model Search
 
+### v261027.02 — Open LLM Leaderboard v2 scores
+
+- Added optional progress/cancellation-controlled import of the official historical v2 table, cached for the page session.
+- Added source-labelled published Average, individual normalized benchmarks, and raw variants; keeps evaluation settings/scales separate and matches exact repository IDs only.
+- Validates one dataset revision across all pages and publishes scores atomically. Excludes flagged/invalid rows and reports failures without hiding card scores.
+- Added tests for pagination, identity, provenance, conflicts, caching, cancellation, schema/revision errors and retries; a full live import verified the published data.
+
 ### v261027.01 — Reported benchmark metrics and colour themes
 
 - Added structured model-card evaluation scores to search, base-model, and individual quantization tables, with expandable context and safe source links.

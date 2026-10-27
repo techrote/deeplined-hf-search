@@ -12,7 +12,13 @@ The app reads numeric scores from `model-index` metadata and `eval_results` meta
 
 Only the selected evaluation context is sorted. Missing or conflicting values stay last in both directions. Dataset split/config/revision, metric configuration/arguments, task, and reported source are kept separate. Raw values retain their original scale; scores are not averaged, converted into an overall ranking, or inherited by derivatives. Publisher-supplied scores have not been independently verified, and even similarly labelled evaluations may use different setups. Use ascending order for metrics such as error rate or loss, where lower is better.
 
-Run `node tests/benchmarks-themes-test.cjs` for benchmark parsing, numeric sorting, escaped context, and saved-theme checks.
+Use **Load Open LLM Leaderboard scores** to import the official historical v2 table from `open-llm-leaderboard/contents`. The dataset currently has 4,576 rows and its published snapshot is from March 2025, so newer models may not appear. Import is optional, uses the shared rate-limited queue, reports progress, and can be stopped. The table is cached for this page session, including for models loaded later; Clear Cache removes it.
+
+The import adds published Average, IFEval, BBH, MATH Lvl 5, GPQA, MUSR, and MMLU-PRO scores, plus separate raw metric variants. Select an **Open LLM v2** metric in the same benchmark dropdown to sort. Card and leaderboard sources remain separate; raw and normalized scales are not mixed. Precision, weight type, and chat-template settings remain distinct. Conflicting runs for the same context stay unavailable rather than selecting the highest score.
+
+Only exact, case-sensitive repository IDs match; a quantization or fine-tune does not receive its parent's score. Flagged or invalid rows are excluded. Expanded scores include the evaluated model SHA, submission/run details, and dataset revision; a historical evaluated revision may differ from the model's current revision. All pages must have the same browser-visible dataset revision header before any imported scores are published. Partial, changed, or failed imports apply no new scores and can be retried. No model weights are downloaded.
+
+Run `node tests/benchmarks-themes-test.cjs` and `node tests/leaderboard-test.cjs` for score, theme, and import regression checks. The optional `LIVE_LEADERBOARD=1 node tests/leaderboard-test.cjs` performs the full network import and checks a known published score.
 
 ## Search usage
 

@@ -501,8 +501,11 @@
   <select id="theme-select"><option value="dark">Dark</option><option value="light">Light</option><option value="midnight">Midnight blue</option><option value="forest">Forest</option></select>
   <label for="benchmark-select">Benchmark metric</label>
   <select id="benchmark-select"><option value="">Choose after loading models</option></select>
+  <button type="button" id="leaderboard-load">Load Open LLM Leaderboard scores</button>
+  <button type="button" id="leaderboard-stop" disabled>Stop leaderboard import</button>
 </div>
-<p class="benchmark-note">Scores come from structured model-card evaluations, as reported by publishers. Select a metric, then click a score column to sort loaded models. Missing or conflicting scores stay last in either direction. Expand a score to inspect its context. Scores and evaluation setups may not be directly comparable; no base-model scores are inherited.</p>
+<p class="benchmark-note">Scores come from model-card metadata or the optional Open LLM Leaderboard v2 import. Select a metric, then click a score column to sort loaded models. Missing or conflicting scores stay last. Expand a score to inspect its context. Leaderboard data is historical, matches exact repository IDs only, and may evaluate an older revision. No base-model scores are inherited.</p>
+<div id="leaderboard-status" role="status" aria-live="polite">Open LLM scores are not loaded. Import downloads the official v2 table once and caches it for this page session.</div>
 <div id="benchmark-status" role="status" aria-live="polite"></div>
 <section id="regex-search" aria-labelledby="regex-search-title">
   <h2 id="regex-search-title">Advanced search · model names and cards</h2>
@@ -635,7 +638,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── App Version ──
-const APP_VERSION = '261027.01';
+const APP_VERSION = '261027.02';
 // See DESIGN.md — architecture decisions, data flow, and configuration reference.
 let _authorData = [];
 
@@ -1276,6 +1279,11 @@ function invalidateDomPrefix(prefix) { for (const k of _domCache) if (k[0].start
 // ── State Reset (Clear Cache) ──
 function resetAppState() {
   stopRegexSearch();
+  stopLeaderboardImport();
+  _leaderboardRows.clear();
+  _leaderboardScoreCache.clear();
+  _leaderboardRevision = '';
+  document.getElementById('leaderboard-status').textContent = 'Open LLM Leaderboard cache cleared.';
   _regexCardCache.clear();
   _benchmarkCatalog.clear();
   _benchmarkKey = '';
@@ -1412,6 +1420,7 @@ function _dispatchFetchWithRetry(item, gen, retries) {
           _dequeueNext();
           return;
         }
+        if (item.responseType === 'leaderboard') data = { data, revision: res.headers.get('X-Revision') };
         if (isStale(gen)) { bailQueueItem(item, () => { _inflightCount--; _dequeueNext(); }); return; }
         _inflightCount--;
         item.resolve(data);
@@ -1493,6 +1502,8 @@ function initAppearanceAndBenchmarks() {
     document.getElementById('benchmark-search-sort').textContent = `Benchmark score ${_benchmarkSearchAsc ? '▲' : '▼'}`;
     renderSearchResults();
   });
+  document.getElementById('leaderboard-load').addEventListener('click', loadLeaderboard);
+  document.getElementById('leaderboard-stop').addEventListener('click', stopLeaderboardImport);
 }
 
 // ── Regex Search ──
@@ -1657,6 +1668,129 @@ let _benchmarkKey = '';
 let _benchmarkOptionsTimer = null;
 let _benchmarkSearchAsc = null;
 const _searchResults = [];
+const LEADERBOARD_DATASET = 'open-llm-leaderboard/contents';
+const LEADERBOARD_COLUMNS = ['Average ⬆️', 'IFEval', 'BBH', 'MATH Lvl 5', 'GPQA', 'MUSR', 'MMLU-PRO', 'IFEval Raw', 'BBH Raw', 'MATH Lvl 5 Raw', 'GPQA Raw', 'MUSR Raw', 'MMLU-PRO Raw'];
+const _leaderboardRows = new Map();
+const _leaderboardScoreCache = new Map();
+let _leaderboardRevision = '';
+let _leaderboardRun = null;
+
+function compactLeaderboardRow(row) {
+  if (!row || typeof row.fullname !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(row.fullname)) return null;
+  if (row.Flagged !== false || typeof row.Precision !== 'string' || !row.Precision) return null;
+  const scores = Object.fromEntries(LEADERBOARD_COLUMNS.filter(key => typeof row[key] === 'number' && Number.isFinite(row[key])).map(key => [key, row[key]]));
+  if (!Object.keys(scores).length) return null;
+  return { id: row.fullname, precision: row.Precision, weightType: row['Weight type'] || 'unspecified', chatTemplate: row['Chat Template'] ?? null, sha: row['Model sha'] || '', evaluation: row.eval_name || '', submitted: row['Submission Date'] || '', scores };
+}
+
+function leaderboardBenchmarks(id) {
+  if (_leaderboardScoreCache.has(id)) return _leaderboardScoreCache.get(id);
+  const scores = [];
+  for (const row of _leaderboardRows.get(id) || []) {
+    for (const [metric, value] of Object.entries(row.scores)) {
+      const descriptor = { source: LEADERBOARD_DATASET, version: 'Open LLM Leaderboard v2', datasetRevision: _leaderboardRevision, metric, precision: row.precision, weightType: row.weightType, chatTemplate: row.chatTemplate };
+      scores.push({ key: stableBenchmarkJSON(descriptor), label: `Open LLM v2 · ${metric} · ${row.precision} · ${row.weightType} · chat template ${String(row.chatTemplate)}`, value,
+        sourceURL: `https://huggingface.co/datasets/${LEADERBOARD_DATASET}/blob/${_leaderboardRevision}/README.md`,
+        context: stableBenchmarkJSON({ ...descriptor, model: row.id, evaluatedModelRevision: row.sha, evaluation: row.evaluation, submitted: row.submitted, historical: true, scale: metric.endsWith(' Raw') ? 'original raw metric (not normalized)' : 'leaderboard-normalized score (0–100); Average is the published aggregate', note: 'Exact repository match only. The current model revision may differ; no claim of current-revision equivalence.' }) });
+    }
+  }
+  if (_leaderboardScoreCache.size >= 2000) _leaderboardScoreCache.delete(_leaderboardScoreCache.keys().next().value);
+  _leaderboardScoreCache.set(id, scores);
+  return scores;
+}
+
+function modelBenchmarks(model) {
+  return [...(model.benchmarks || []), ...leaderboardBenchmarks(model.id)];
+}
+
+function setLeaderboardBusy(busy) {
+  document.getElementById('leaderboard-load').disabled = busy;
+  document.getElementById('leaderboard-stop').disabled = !busy;
+}
+
+function stopLeaderboardImport() {
+  if (!_leaderboardRun) return;
+  _leaderboardRun = null;
+  setLeaderboardBusy(false);
+  document.getElementById('leaderboard-status').textContent = 'Leaderboard import stopped. Existing scores retained; an already-started request may finish.';
+}
+
+function refreshLeaderboardViews() {
+  let matched = 0;
+  const seen = new Set();
+  const visit = model => {
+    if (seen.has(model.id)) return;
+    seen.add(model.id);
+    const scores = leaderboardBenchmarks(model.id);
+    if (scores.length) { matched++; registerBenchmarks(scores); }
+  };
+  for (const { model } of _searchResults) visit(model);
+  forEachModelRef(visit);
+  recomputeAndRender(new Set(RC.expandedSections));
+  renderSearchResults();
+  return matched;
+}
+
+async function loadLeaderboard() {
+  if (_leaderboardRun) return;
+  const status = document.getElementById('leaderboard-status');
+  if (_leaderboardRevision) {
+    const matched = refreshLeaderboardViews();
+    status.textContent = `Cached historical Open LLM v2 scores: ${matched} loaded models matched by exact ID. Dataset revision ${_leaderboardRevision}.`;
+    return;
+  }
+  const gen = _fetchGeneration;
+  const run = {};
+  _leaderboardRun = run;
+  const current = () => _leaderboardRun === run && !isStale(gen);
+  const pending = new Map();
+  let revision = '', offset = 0, total = null, excluded = 0;
+  setLeaderboardBusy(true);
+  status.textContent = 'Importing historical Open LLM Leaderboard v2 scores…';
+  try {
+    while (total === null || offset < total) {
+      const params = new URLSearchParams({ dataset: LEADERBOARD_DATASET, config: 'default', split: 'train', offset: String(offset), length: '100' });
+      const page = await fetchResource(`https://datasets-server.huggingface.co/rows?${params}`, 'leaderboard');
+      if (!current()) return;
+      const data = page.data;
+      if (!/^[a-f0-9]{40}$/.test(page.revision || '')) throw new Error('Missing dataset revision; refusing an unversioned import.');
+      if (revision && page.revision !== revision) throw new Error('Dataset revision changed during import. Please retry.');
+      revision = page.revision;
+      if (!data || data.partial !== false || !Number.isInteger(data.num_rows_total) || data.num_rows_total < 0 || data.num_rows_total > 10000 || !Array.isArray(data.rows)) throw new Error('Incomplete or unsupported leaderboard export.');
+      if (total !== null && total !== data.num_rows_total) throw new Error('Dataset row count changed during import. Please retry.');
+      total = data.num_rows_total;
+      if (!data.rows.length && offset < total) throw new Error('Leaderboard page is empty before the end of the export.');
+      if (data.rows.length > 100 || offset + data.rows.length > total) throw new Error('Invalid leaderboard page length.');
+      const featureNames = new Set((data.features || []).map(feature => feature.name));
+      if (!['fullname', 'Precision', 'Flagged', 'IFEval', 'MMLU-PRO'].every(name => featureNames.has(name))) throw new Error('Leaderboard schema changed; import was not applied.');
+      for (let i = 0; i < data.rows.length; i++) {
+        const item = data.rows[i];
+        if (item.row_idx !== offset + i || item.truncated_cells?.length) throw new Error('Leaderboard rows are truncated or out of order.');
+        const row = compactLeaderboardRow(item.row);
+        if (!row) { excluded++; continue; }
+        if (!pending.has(row.id)) pending.set(row.id, []);
+        pending.get(row.id).push(row);
+      }
+      offset += data.rows.length;
+      status.textContent = `Importing historical Open LLM v2 scores: ${offset}/${total} rows checked…`;
+    }
+    if (!current()) return;
+    _leaderboardRows.clear();
+    for (const [id, rows] of pending) _leaderboardRows.set(id, rows);
+    _leaderboardScoreCache.clear();
+    _leaderboardRevision = revision;
+    const matched = refreshLeaderboardViews();
+    status.textContent = `Historical Open LLM v2 scores loaded for ${pending.size} repositories; ${matched} loaded models matched exactly. ${excluded} flagged/invalid rows excluded. Dataset revision ${revision}. Newer models may have no entry.`;
+  } catch (error) {
+    if (current()) status.textContent = `Leaderboard import failed: ${error.message} No partial import applied. You can retry; model-card scores remain available.`;
+  } finally {
+    if (_leaderboardRun === run) {
+      _leaderboardRun = null;
+      setLeaderboardBusy(false);
+      if (isStale(gen)) status.textContent = 'Leaderboard import stopped because explorer data changed. No partial import applied; please retry.';
+    }
+  }
+}
 
 function stableBenchmarkJSON(value) {
   if (Array.isArray(value)) return '[' + value.map(stableBenchmarkJSON).join(',') + ']';
@@ -1705,12 +1839,12 @@ function updateBenchmarkOptions() {
 }
 
 function benchmarkValue(model) {
-  const values = [...new Set((model.benchmarks || []).filter(score => score.key === _benchmarkKey).map(score => score.value))];
+  const values = [...new Set(modelBenchmarks(model).filter(score => score.key === _benchmarkKey).map(score => score.value))];
   return values.length === 1 ? values[0] : null;
 }
 
 function benchmarkCell(model) {
-  const scores = model.benchmarks || [];
+  const scores = modelBenchmarks(model);
   if (!scores.length) return '<span class="benchmark-missing" title="No structured evaluation scores reported for this model">—</span>';
   const value = benchmarkValue(model);
   const summary = !_benchmarkKey ? `${scores.length} reported` : value === null ? 'Unavailable' : String(value);
@@ -1720,7 +1854,7 @@ function benchmarkCell(model) {
 
 function addRegexResult(model, snippet) {
   model = { ...model, benchmarks: extractBenchmarks(model) };
-  registerBenchmarks(model.benchmarks);
+  registerBenchmarks(modelBenchmarks(model));
   _searchResults.push({ model, snippet });
   renderSearchResults();
 }
@@ -2098,7 +2232,7 @@ function normalizeModel(m) {
     }
     const displayName = m.id.split('/').slice(1).join('/');
     const benchmarks = extractBenchmarks(m);
-    registerBenchmarks(benchmarks);
+    registerBenchmarks(modelBenchmarks({ id: m.id, benchmarks }));
     return {
       id: m.id,
       displayName,
